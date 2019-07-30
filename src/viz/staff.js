@@ -2,10 +2,22 @@ import * as d3 from 'd3';
 import _ from 'lodash';
 
 // TO DO:
-// 1. fig out how to properly translate pitch
+// - make accidentals placement more dynamic
 
-export const drawStaff = ({timestep, numTimestep, chords}) => {
+export const drawStaff = (ref, timestep, numTimestep, chords, divHeight) => {
     // [{"notes":[60,64,67,71],"pitches":["C#","Eb","G","B"]}]
+    const stringOrder = "cdefgab"
+                        .split("")
+                        .reduce((acc, char, i) => { 
+                            acc[char] = i; return acc 
+                        }, {})
+
+    const translate = (note, pitch) => {
+        const octave = Math.floor((note - 60)/12) * 8
+        const base = stringOrder[pitch[0].toLowerCase()]
+        return base + octave
+    }
+
     const countAccidental = (str, pattern) => {
         const re = new RegExp(pattern, 'g')
         return ((str || '').match(re) || []).length
@@ -17,14 +29,16 @@ export const drawStaff = ({timestep, numTimestep, chords}) => {
         return sharpCt - flatCt
     }
 
-    const translate = (note) => {
-        return Math.floor((note - 60) * 7/12)
-    }
+    console.log(chords)
 
     let data = chords.map( chord => 
-        chord.notes.map( (note, i) => 
-            ({ note: translate(note), accidental: countAllAccidentals(chord.pitches[i]) })
-        ))
+        chord.notes.map( (note, i) => {
+            let pitch = chord.pitches[i]
+            return { note: translate(note, pitch), accidental: countAllAccidentals(pitch) }
+        }        
+    ))
+
+    console.log(data)
 
     // format data                
     numTimestep = data.length;
@@ -44,15 +58,21 @@ export const drawStaff = ({timestep, numTimestep, chords}) => {
         )
     ) // [{note: 12, offset: true, x: 0}, ...]
 
+    console.log(data)
     // boilerplate
     const margin = { top: 50, right: 50, bottom: 50, left: 50 },
-        width = 800 - margin.left - margin.right,
-        height = 300 - margin.top - margin.bottom;
+        MAXW = 800,
+        MAXH = 300,
+        width = MAXW - margin.left - margin.right,
+        height = MAXH - margin.top - margin.bottom;
 
-    const svg = d3.select("#staff-viz")
+    const svg = d3.select(ref.current)//d3.select("#staff-viz")
                 .append("svg")
-                .attr("width", width + margin.left + margin.right)
-                .attr("height", height + margin.top + margin.bottom)
+                .attr("viewBox", `0 0 ${MAXW} ${MAXH}`)
+                .attr("width", "100%")
+                .attr("height", "100%")
+                // .attr("width", width + margin.left + margin.right)
+                // .attr("height", height + margin.top + margin.bottom)
                 .append("g")
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
@@ -106,7 +126,8 @@ export const drawStaff = ({timestep, numTimestep, chords}) => {
         .attr("fill", "none")
     
     notesAndAccidentals.append("text")
-        .attr("x", d => xScale((-0.1 * d.offset) - 0.4))
+        .attr("x", d => d.offset ? xScale(-0.18) : xScale(-0.12))
+        // .attr("x", d => xScale((-0.15 * d.offset) - 0.15))
         .attr("dy", ".35em")
         .text(d => convertAccidental(d.accidental) )
     

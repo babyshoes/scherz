@@ -11,3 +11,24 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
 }
+
+.curve.active {
+  fill-opacity: 0.8;
+}
+
+.curve {
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  stroke-width: 2;
+  fill-opacity: 0.5
+}
+
+
+.pointer circle.active {
+  r: 3.0;
+}
+
+.pointer circle {
+  r: 0;
+  cursor: pointer;
+}

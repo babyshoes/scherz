@@ -2,10 +2,9 @@ import * as d3 from 'd3';
 import _ from 'lodash';
 
 // TO DO
-// - curve lines
-// - option to select dimension (dims others)
-    // - ony draggable when selected
-    // - max lines that appear when dragging a line
+// - have curve and staff share x-axis?
+// - add new points
+// - tool tip on hover
 
 export const drawCurve = (ref, numTimestep, tensions) => {
 
@@ -46,6 +45,21 @@ export const drawCurve = (ref, numTimestep, tensions) => {
     svg.append("g")
        .call(axis)
 
+    function activate(d) {
+        let current = d3.select(this).classed("active")
+        d3.selectAll("path.curve.active").classed("active", false)
+        d3.select(this).classed("active", !current)
+
+        updatePointers(stacked)
+    }
+
+    // const dimTip = d3.tip()
+    //     .attr('class', 'd3-tip')
+    //     .offset([-10, 0])
+    //     .html(function(d) {
+    //         return "<span>" + d.key + "</span>"
+    //     })
+
     const updateAreaPlot = (stacked) =>
         svg
             .selectAll("path.curve")
@@ -53,39 +67,58 @@ export const drawCurve = (ref, numTimestep, tensions) => {
             .join(
                 enter => enter
                             .append("path")
-                            .attr("class", "curve")     
+                            .attr("class", "curve") 
+                            .classed("active", 
+                                d => d.key === "color")
                 , update => update.transition()   
                 , exit => exit.remove()           
             )
-            .attr("d", 
-                d3.area()
-                    .x((d, i) => xScale(i))
-                    .y0((d) => yScale(d[0]))
-                    .y1((d) => yScale(d[1]))
-                )
-            .attr("stroke-linejoin", "round")
-            .attr("stroke-linecap", "round")
+            .attr("d", d3.area()
+                .curve(d3.curveMonotoneX)
+                .x((d, i) => xScale(i))
+                .y0((d) => yScale(d[0]))
+                .y1((d) => yScale(d[1]))
+            )
             .attr("fill", (d) => color(d.key))
-            .attr("fill-opacity", .5)
             .attr("stroke", (d) => color(d.key))
-            .attr("stroke-width", 2)
+            .on("click", activate)
+            // .on('mousover', dimTip.show)
+            // .on('mouseout', dimTip.hide)
 
-    const dragStart = (d) =>
-        d3.select(this).raise().classed('active', true);
+    const dragStart = (d) =>{
+        d3.select(this).classed('active', true);
+        // d3.select(this).raise().classed('active', true);
     
+    }
+
+    const getPointFrom = (stacked, dim, pos) => {
+        return stacked.filter(layer => layer.key === dim)[0][pos]
+    }
+    const getDimBounds = (point, dim, currentHeight) => {
+        const dataVal = point.data[dim]
+        const diffsPossible = [1.0 - dataVal, 0.0 - dataVal]
+
+        return diffsPossible.map(diff => diff + currentHeight)
+    }
     
     const dragging = (d) => {
-        d.yPos = yScale.invert(d3.event.y)
-        d3.select(this).attr("transform", d => 
-            `translate(${xScale(d.xPos)}, ${yScale(d.yPos)})`
-        )
-
-        let diff = d.yPos - stacked.filter(dim => dim.key === d.dim)[0][d.xPos][1]
-        data[d.xPos][d.dim] += diff
-
-        stacked = d3.stack().keys(groups)(data)
-        updateAreaPlot(stacked)
-        updatePointers(pointerData(stacked))
+        const point = getPointFrom(stacked, d.dim, d.xPos)
+        const [dimMax, dimMin] = getDimBounds(point, d.dim, d.yPos)
+        
+        const newY = yScale.invert(d3.event.y)
+        if (newY <= dimMax && newY >= dimMin) {
+            d.yPos = newY
+            d3.select(this).attr("transform", d => 
+                `translate(${xScale(d.xPos)}, ${yScale(d.yPos)})`
+            )
+    
+            const diff = d.yPos - point[1]
+            data[d.xPos][d.dim] += diff
+    
+            stacked = d3.stack().keys(groups)(data)
+            updateAreaPlot(stacked)
+            updatePointers(stacked)
+        }
     }
     
     const dragEnd = (d) =>
@@ -95,16 +128,26 @@ export const drawCurve = (ref, numTimestep, tensions) => {
         .on('start', dragStart)
         .on('drag', dragging)
         .on('end', dragEnd)
+    
+    const getActiveDim = () => {
+        const activeCurve = d3.selectAll("path.curve.active")
+        return activeCurve.data().length > 0 ? activeCurve.datum().key : null
+    }
 
-    const pointerData = (stacked) =>
-        _.flatMap(stacked, (layer) => 
+    const getPointerData = (stacked) => {
+        const activeDim = getActiveDim()
+        return _.flatMap(stacked, (layer) => 
             layer.map((point, i) => {
-                return {xPos:i, yPos: point[1], dim: layer.key}
+                if (layer.key === activeDim) {
+                    return {xPos:i, yPos: point[1], dim: layer.key}
+                }
+                
             } 
-        ))
+        )).filter( val => val != null)
+    }
 
-
-    let updatePointers = (pointerData) =>
+    const updatePointers = (data) => {
+        const pointerData = getPointerData(data)
         svg.selectAll('g.pointer')
             .data(pointerData, (d) => d.dim)
             .join(
@@ -116,18 +159,17 @@ export const drawCurve = (ref, numTimestep, tensions) => {
                     )
                     .call(drag)
                     .append('circle')
-                    .attr('r', 3.0)
-                    .style('cursor', 'pointer')
+                    .classed("active", true)
                     .style('fill', (d) => color(d.dim) )
                 , update => update
                     .attr("transform", d => 
                         `translate(${xScale(d.xPos)}, ${yScale(d.yPos)})`
                     )
-                    .call(drag)
                 , exit => exit.remove()
             )
-  
+    }
+    
     let stacked = d3.stack().keys(groups)(data)
     updateAreaPlot(stacked)
-    updatePointers(pointerData(stacked))
+    updatePointers(stacked)
 }

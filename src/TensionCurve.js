@@ -1,12 +1,17 @@
-import React from 'react';
+import React, { useLayoutEffect, useRef } from 'react';
+import { drawCurve } from './viz/curve'
 import './App.css';
 
-const Tension = ({color, consonance, gravity, global, numTimestep}) => {
-    return (
-        <div className="App">
-    
-        </div>
-      );
-}
+// no global for now
+export default function Tension ({numTimesteps, tensions}) {
+    const ref = useRef(null)
 
-  export default Tension;
+    useLayoutEffect(() => {
+        drawCurve(ref, numTimesteps, tensions)
+    })
+
+    return (
+        <div ref={ref} id="curve-viz"/>
+    )
+
+} 

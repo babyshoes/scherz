@@ -1,11 +1,10 @@
 import * as d3 from 'd3';
 import _ from 'lodash';
-import d3Tip from 'd3-tip';
+// import d3Tip from 'd3-tip';
 
 // TO DO
 // - have curve and staff share x-axis?
 // - add new points
-// - tool tip on hover
 
 export const drawCurve = (ref, numTimestep, tensions) => {
 
@@ -24,26 +23,32 @@ export const drawCurve = (ref, numTimestep, tensions) => {
         .domain(groups)
         .range(['#e41a1c','#377eb8','#4daf4a','#984ea3','#ff7f00','#ffff33','#a65628','#f781bf'])
 
-    const dimTip = d3Tip()
-        .attr('class', 'd3-tip')
-        // .offset([-10, 0])
-        .html(function(d) {
-            return "<span>" + d.key + "</span>"
-        })
+    // const dimTip = d3Tip()
+    //     .attr('class', 'd3-tip')
+    //     // .offset([-10, 0])
+    //     .html(function(d) {
+    //         return "<span>" + d.key + "</span>"
+    //     })
 
     const svg = d3.select(ref.current)
-                .append("svg")
-                .attr("viewBox", `0 0 ${MAXW} ${MAXH}`)
-                .attr("width", "100%")
-                .attr("height", "100%")
-                .append("g")
-                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-    
-    svg.call(dimTip)
+        .append("svg")
+        .attr("viewBox", `0 0 ${MAXW} ${MAXH}`)
+        .attr("width", "100%")
+        .attr("height", "100%")
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    // svg.call(dimTip)
+    const legend = svg.append("text")
+        .attr("x", 20)
+        .attr("y", 20)
+        .attr("font-family", "sans-serif")
+        .attr("font-size", "15px")
 
     const xScale = d3.scaleLinear()
                 .domain([0, numTimestep])
                 .range([xstart, width])
+                // .range([0, width])
 
     const yScale = d3.scaleLinear()
                 .domain([3, 0])
@@ -61,6 +66,27 @@ export const drawCurve = (ref, numTimestep, tensions) => {
         d3.select(this).classed("active", !current)
 
         updatePointers(stacked)
+    }
+
+    function displayDimInfo (d) {
+        // const path = svg.selectAll("path.curve").filter(l => l.key === d.key)
+        const mouseX = xScale.invert(d3.event.x)
+
+        legend.selectAll("tspan").remove()
+        let string = `${d.key}`
+        legend.append("tspan")
+            .text(string) 
+            .attr("font-weight", "bold")
+        // TO DO: fig out better way of getting closest point
+        if (Math.abs(mouseX - Math.round(mouseX)) < 0.3) {
+            let desc = `: ${stacked.filter(l => l.key === d.key)[0][Math.round(mouseX)].data[d.key]}`
+            legend.append("tspan")
+            .text(desc)
+        }    
+    } 
+
+    const clearDimInfo = (d) => {
+        legend.selectAll("tspan").remove()
     }
 
     const updateAreaPlot = (stacked) =>
@@ -84,8 +110,9 @@ export const drawCurve = (ref, numTimestep, tensions) => {
             )
             .attr("fill", (d) => color(d.key))
             .attr("stroke", (d) => color(d.key))
-            // .on('mou')
-            .on('mouseover', dimTip.show)
+            .on("mousemove", displayDimInfo)
+            .on("mouseout", clearDimInfo)
+            // .on('mouseover', dimTip.show)
             // .on('mouseout', dimTip.hide)
             .on("click", activate)
 
@@ -146,7 +173,6 @@ export const drawCurve = (ref, numTimestep, tensions) => {
                 if (layer.key === activeDim) {
                     return {xPos:i, yPos: point[1], dim: layer.key}
                 }
-                
             } 
         )).filter( val => val != null)
     }

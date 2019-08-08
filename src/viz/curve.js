@@ -1,5 +1,6 @@
 import * as d3 from 'd3';
 import _ from 'lodash';
+import d3Tip from 'd3-tip';
 
 // TO DO
 // - have curve and staff share x-axis?
@@ -22,7 +23,14 @@ export const drawCurve = (ref, numTimestep, tensions) => {
     const color = d3.scaleOrdinal()
         .domain(groups)
         .range(['#e41a1c','#377eb8','#4daf4a','#984ea3','#ff7f00','#ffff33','#a65628','#f781bf'])
-    
+
+    const dimTip = d3Tip()
+        .attr('class', 'd3-tip')
+        // .offset([-10, 0])
+        .html(function(d) {
+            return "<span>" + d.key + "</span>"
+        })
+
     const svg = d3.select(ref.current)
                 .append("svg")
                 .attr("viewBox", `0 0 ${MAXW} ${MAXH}`)
@@ -30,6 +38,8 @@ export const drawCurve = (ref, numTimestep, tensions) => {
                 .attr("height", "100%")
                 .append("g")
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    
+    svg.call(dimTip)
 
     const xScale = d3.scaleLinear()
                 .domain([0, numTimestep])
@@ -53,13 +63,6 @@ export const drawCurve = (ref, numTimestep, tensions) => {
         updatePointers(stacked)
     }
 
-    // const dimTip = d3.tip()
-    //     .attr('class', 'd3-tip')
-    //     .offset([-10, 0])
-    //     .html(function(d) {
-    //         return "<span>" + d.key + "</span>"
-    //     })
-
     const updateAreaPlot = (stacked) =>
         svg
             .selectAll("path.curve")
@@ -81,9 +84,11 @@ export const drawCurve = (ref, numTimestep, tensions) => {
             )
             .attr("fill", (d) => color(d.key))
             .attr("stroke", (d) => color(d.key))
-            .on("click", activate)
-            // .on('mousover', dimTip.show)
+            // .on('mou')
+            .on('mouseover', dimTip.show)
             // .on('mouseout', dimTip.hide)
+            .on("click", activate)
+
 
     const dragStart = (d) =>{
         d3.select(this).classed('active', true);

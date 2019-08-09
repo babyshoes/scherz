@@ -1,64 +1,50 @@
 import * as d3 from 'd3';
 import _ from 'lodash';
-// import d3Tip from 'd3-tip';
+import { baseLayout, makeSVG } from './util'
 
 // TO DO
 // - have curve and staff share x-axis?
 // - add new points
+// - fig out display on pointer *hover*
 
-export const drawCurve = (ref, numTimestep, tensions) => {
-
-    let data = [{color:0, dissonance:0, gravity:0},...tensions]
+export const drawCurve = (ref, xScale, tensions, onCurveChange) => {
+    let data = tensions
 
     const groups = ["color", "dissonance", "gravity"]
 
-    const margin = { top: 50, right: 30, bottom: 50, left: 50 },
-        MAXW = 800,
-        MAXH = 500,
-        xstart = margin.right + 10,
-        width = MAXW - margin.left - margin.right,
-        height = MAXH - margin.top - margin.bottom;
+    // lay out lay out
+    const layout = { 
+        ...baseLayout,
+        marginTop: 10,
+        marginBottom: 10,
+        maxH: 500
+    }
 
+    layout.height = layout.maxH - layout.marginTop - layout.marginBottom
+
+    const yScale = d3.scaleLinear()
+        .domain([3, 0])
+        .range([0, layout.height])
+        
     const color = d3.scaleOrdinal()
         .domain(groups)
         .range(['#e41a1c','#377eb8','#4daf4a','#984ea3','#ff7f00','#ffff33','#a65628','#f781bf'])
 
-    // const dimTip = d3Tip()
-    //     .attr('class', 'd3-tip')
-    //     // .offset([-10, 0])
-    //     .html(function(d) {
-    //         return "<span>" + d.key + "</span>"
-    //     })
+    const svg = makeSVG(ref, layout)
 
-    const svg = d3.select(ref.current)
-        .append("svg")
-        .attr("viewBox", `0 0 ${MAXW} ${MAXH}`)
-        .attr("width", "100%")
-        .attr("height", "100%")
-        .append("g")
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-    // svg.call(dimTip)
     const legend = svg.append("text")
-        .attr("x", 20)
-        .attr("y", 20)
+        .attr("x", 30)
+        .attr("y", 30)
         .attr("font-family", "sans-serif")
         .attr("font-size", "15px")
 
-    const xScale = d3.scaleLinear()
-                .domain([0, numTimestep])
-                .range([xstart, width])
-                // .range([0, width])
 
-    const yScale = d3.scaleLinear()
-                .domain([3, 0])
-                .range([0, height])
     // draw axis
-    const axis = d3.axisLeft()
-                 .scale(yScale)
+    // const axis = d3.axisLeft()
+    //              .scale(yScale)
 
-    svg.append("g")
-       .call(axis)
+    // svg.append("g")
+    //    .call(axis)
 
     function activate(d) {
         let current = d3.select(this).classed("active")
@@ -68,24 +54,31 @@ export const drawCurve = (ref, numTimestep, tensions) => {
         updatePointers(stacked)
     }
 
-    function displayDimInfo (d) {
-        // const path = svg.selectAll("path.curve").filter(l => l.key === d.key)
-        const mouseX = xScale.invert(d3.event.x)
-
+    function displayDimensionInfo (d) {
+        const x = d3.event.type.startsWith("mouse") ? d3.mouse(this)[0] : d3.event.x
+        const mouseX = xScale.invert(x)
+        // console.log(x)
+        // if(d3.event.type==="mouseover"){
+        //     debugger
+        // }
+        // console.log(d3.event.type)
         legend.selectAll("tspan").remove()
         let string = `${d.key}`
         legend.append("tspan")
             .text(string) 
             .attr("font-weight", "bold")
-        // TO DO: fig out better way of getting closest point
-        if (Math.abs(mouseX - Math.round(mouseX)) < 0.3) {
-            let desc = `: ${stacked.filter(l => l.key === d.key)[0][Math.round(mouseX)].data[d.key]}`
+
+        if (Math.abs(mouseX - Math.round(mouseX)) < 0.1) {
+            const dimension = stacked.find(l => l.key === d.key)
+            const node = dimension[Math.round(mouseX)]
+            const nodeVal = node.data[d.key]
+            const description = `: ${nodeVal.toFixed(1)}`
             legend.append("tspan")
-            .text(desc)
+                .text(description)
         }    
     } 
 
-    const clearDimInfo = (d) => {
+    const clearDimensionInfo = (d) => {
         legend.selectAll("tspan").remove()
     }
 
@@ -99,6 +92,9 @@ export const drawCurve = (ref, numTimestep, tensions) => {
                             .attr("class", "curve") 
                             .classed("active", 
                                 d => d.key === "color")
+                            .attr("fill", (d) => color(d.key))
+                            .attr("stroke", (d) => color(d.key))
+                            .on("click", activate)
                 , update => update.transition()   
                 , exit => exit.remove()           
             )
@@ -108,70 +104,72 @@ export const drawCurve = (ref, numTimestep, tensions) => {
                 .y0((d) => yScale(d[0]))
                 .y1((d) => yScale(d[1]))
             )
-            .attr("fill", (d) => color(d.key))
-            .attr("stroke", (d) => color(d.key))
-            .on("mousemove", displayDimInfo)
-            .on("mouseout", clearDimInfo)
-            // .on('mouseover', dimTip.show)
-            // .on('mouseout', dimTip.hide)
-            .on("click", activate)
-
+            // .on("mouseover", displayDimensionInfo)
+            .on("mousemove", displayDimensionInfo)
+            .on("mouseout", clearDimensionInfo)
+            // .on('mouseover', dimensionTip.show)
+            // .on('mouseout', dimensionTip.hide)
+    
 
     const dragStart = (d) =>{
         d3.select(this).classed('active', true);
         // d3.select(this).raise().classed('active', true);
-    
+        displayDimensionInfo(d)
     }
 
-    const getPointFrom = (stacked, dim, pos) => {
-        return stacked.filter(layer => layer.key === dim)[0][pos]
+    const getPointFrom = (stacked, key, pos) => {
+        return stacked.filter(layer => layer.key === key)[0][pos]
     }
-    const getDimBounds = (point, dim, currentHeight) => {
-        const dataVal = point.data[dim]
+    const getDimensionBounds = (point, key, currentHeight) => {
+        const dataVal = point.data[key]
         const diffsPossible = [1.0 - dataVal, 0.0 - dataVal]
 
         return diffsPossible.map(diff => diff + currentHeight)
     }
     
     const dragging = (d) => {
-        const point = getPointFrom(stacked, d.dim, d.xPos)
-        const [dimMax, dimMin] = getDimBounds(point, d.dim, d.yPos)
+        const point = getPointFrom(stacked, d.key, d.xPos)
+        const [dimensionMax, dimensionMin] = getDimensionBounds(point, d.key, d.yPos)
         
         const newY = yScale.invert(d3.event.y)
-        if (newY <= dimMax && newY >= dimMin) {
+        if (newY <= dimensionMax && newY >= dimensionMin) {
             d.yPos = newY
             d3.select(this).attr("transform", d => 
                 `translate(${xScale(d.xPos)}, ${yScale(d.yPos)})`
             )
     
             const diff = d.yPos - point[1]
-            data[d.xPos][d.dim] += diff
+            data[d.xPos][d.key] += diff
     
             stacked = d3.stack().keys(groups)(data)
             updateAreaPlot(stacked)
             updatePointers(stacked)
         }
+        displayDimensionInfo(d)
     }
     
-    const dragEnd = (d) =>
+    const dragEnd = (d) => {
         d3.select(this).classed('active', false);
-
+        onCurveChange(data)
+        clearDimensionInfo()
+    }
+        
     const drag = d3.drag()
         .on('start', dragStart)
         .on('drag', dragging)
         .on('end', dragEnd)
     
-    const getActiveDim = () => {
+    const getActiveDimension = () => {
         const activeCurve = d3.selectAll("path.curve.active")
         return activeCurve.data().length > 0 ? activeCurve.datum().key : null
     }
 
     const getPointerData = (stacked) => {
-        const activeDim = getActiveDim()
+        const activeDimension = getActiveDimension()
         return _.flatMap(stacked, (layer) => 
             layer.map((point, i) => {
-                if (layer.key === activeDim) {
-                    return {xPos:i, yPos: point[1], dim: layer.key}
+                if (layer.key === activeDimension) {
+                    return {xPos:i, yPos: point[1], key: layer.key}
                 }
             } 
         )).filter( val => val != null)
@@ -180,7 +178,7 @@ export const drawCurve = (ref, numTimestep, tensions) => {
     const updatePointers = (data) => {
         const pointerData = getPointerData(data)
         svg.selectAll('g.pointer')
-            .data(pointerData, (d) => d.dim)
+            .data(pointerData, (d) => d.key)
             .join(
                 enter => enter
                     .append("g")
@@ -191,13 +189,16 @@ export const drawCurve = (ref, numTimestep, tensions) => {
                     .call(drag)
                     .append('circle')
                     .classed("active", true)
-                    .style('fill', (d) => color(d.dim) )
+                    .style('fill', (d) => color(d.key) )
                 , update => update
                     .attr("transform", d => 
                         `translate(${xScale(d.xPos)}, ${yScale(d.yPos)})`
                     )
                 , exit => exit.remove()
             )
+            // .on("mouseover", displayDimensionInfo)
+            .on("mousemove", displayDimensionInfo)
+            .on("mouseout", clearDimensionInfo)
     }
     
     let stacked = d3.stack().keys(groups)(data)

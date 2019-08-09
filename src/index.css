@@ -25,7 +25,7 @@ code {
 
 
 .pointer circle.active {
-  r: 3.0;
+  r: 5.0;
 }
 
 .pointer circle {

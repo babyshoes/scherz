@@ -1,10 +1,34 @@
 import * as d3 from 'd3';
 import _ from 'lodash';
+import { makeSVG, baseLayout } from './util'
 
 // TO DO:
 // - make accidentals placement more dynamic
 
-export const drawStaff = (ref, timestep, numTimestep, chords, divHeight) => {
+export const drawStaff = (ref, timestep, xScale, chords) => {
+    // lay down layout
+    const layout = { 
+        ...baseLayout,
+        marginTop: -30,
+        marginBottom: 50,
+        maxH: 300
+    }
+
+    layout.height = layout.maxH - layout.marginTop - layout.marginBottom
+
+    const svg = makeSVG(ref, layout)
+
+    const yScale = d3.scaleLinear()
+                    .domain([16, -8])
+                    .range([0, layout.height])
+    // draw axis
+    // const axis = d3.axisLeft()
+    //              .scale(yScale)
+
+    // svg.append("g")
+    //    .call(axis)
+
+    // format data                
     // [{"notes":[60,64,67,71],"pitches":["C#","Eb","G","B"]}]
     const stringOrder = "cdefgab"
                         .split("")
@@ -29,20 +53,13 @@ export const drawStaff = (ref, timestep, numTimestep, chords, divHeight) => {
         return sharpCt - flatCt
     }
 
-    console.log(chords)
-
     let data = chords.map( chord => 
         chord.notes.map( (note, i) => {
             let pitch = chord.pitches[i]
             return { note: translate(note, pitch), accidental: countAllAccidentals(pitch) }
         }        
     ))
-
-    console.log(data)
-
-    // format data                
-    numTimestep = data.length;
-
+              
     const getOffset = (note, {note: prevNote, offset: prevOffset}) => {
         const diff = note - prevNote
         return (diff <= 1) ? !prevOffset : false
@@ -58,45 +75,13 @@ export const drawStaff = (ref, timestep, numTimestep, chords, divHeight) => {
         )
     ) // [{note: 12, offset: true, x: 0}, ...]
 
-    console.log(data)
-    // boilerplate
-    const margin = { top: 50, right: 50, bottom: 50, left: 50 },
-        MAXW = 800,
-        MAXH = 300,
-        width = MAXW - margin.left - margin.right,
-        height = MAXH - margin.top - margin.bottom;
-
-    const svg = d3.select(ref.current)//d3.select("#staff-viz")
-                .append("svg")
-                .attr("viewBox", `0 0 ${MAXW} ${MAXH}`)
-                .attr("width", "100%")
-                .attr("height", "100%")
-                // .attr("width", width + margin.left + margin.right)
-                // .attr("height", height + margin.top + margin.bottom)
-                .append("g")
-                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-    const xScale = d3.scaleLinear()
-                    .domain([0, numTimestep])
-                    .range([0, width])
-    const yScale = d3.scaleLinear()
-                  .domain([16, -8])
-                  .range([0, height])
-    
-    // draw axis
-    const axis = d3.axisLeft()
-                 .scale(yScale)
-
-    svg.append("g")
-       .call(axis)
-
     // draw ledger lines
-    svg.selectAll("lines")
+    svg.selectAll("line")
        .data([2,4,6,8,10]) 
        .enter()
        .append("line")
        .attr("x1", 0)
-       .attr("x2", width)
+       .attr("x2", layout.width)
        .attr("y1", d => yScale(d))
        .attr("y2", d => yScale(d)) 
        .attr("stroke", "black")  
@@ -118,22 +103,30 @@ export const drawStaff = (ref, timestep, numTimestep, chords, divHeight) => {
         .data(data)
         .enter().append("g")
         .attr("transform", d => `translate(${xScale(d.xPos)}, ${yScale(d.note)})`)
-       
+    
+    const amtOffset = xScale(.1) - xScale(0)
+
+    // draw notes
     notesAndAccidentals.append("circle")
-        .attr("cx", d => xScale(.1 * d.offset))
+        .attr("cx", d => d.offset * amtOffset )
         .attr("r", 7)
         .attr("stroke", "black")
         .attr("fill", "none")
     
+    // draw accidentals
     notesAndAccidentals.append("text")
-        .attr("x", d => d.offset ? xScale(-0.18) : xScale(-0.12))
+        .attr("x", d => d.offset ? amtOffset * -2 : amtOffset * -1.3)
+        // .attr("x", d => d.offset ? xScale(-0.17) : xScale(-0.12))
         // .attr("x", d => xScale((-0.15 * d.offset) - 0.15))
         .attr("dy", ".35em")
         .text(d => convertAccidental(d.accidental) )
     
+    // draw extension ledger lines
     notesAndAccidentals.append("line")
-        .attr("x1", d => -12 + xScale((.1 * d.offset)))
-        .attr("x2", d => 12 + xScale((.1 * d.offset)))
+        .attr("x1", d => amtOffset * -0.8)
+        .attr("x2", d => amtOffset * 0.8)
+        // .attr("x1", d => -12 + xScale((.1 * d.offset)))
+        // .attr("x2", d => 12 + xScale((.1 * d.offset)))
         .attr("stroke", "black")
         .attr("stroke-width", d => extensionLine(d.note))
 

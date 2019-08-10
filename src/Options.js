@@ -51,10 +51,10 @@ const Options = ({selectedScales, tonic, onScaleSelect, onScaleRemove, onTonicCh
         )}
       </select>
       <div>
-        { selectedScales.map(scale => 
-          <div>
+        { selectedScales.map( (scale, index) => 
+          <div key={index}>
             <span onClick={() => onScaleRemove(scale)}>x</span>
-            <span>{scale}</span>
+            <span> {scale}</span>
           </div>
         )}
       </div>  

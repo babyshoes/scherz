@@ -8,9 +8,8 @@ export default ({timestep, numTimesteps, chords, tensions, onCurveChange}) => {
     const staffRef = useRef(null)
     const curveRef = useRef(null)
 
-    const xScale = getxScale(numTimesteps)
-
     useLayoutEffect(() => {
+        const xScale = getxScale(numTimesteps)
         drawStaff(staffRef, timestep, xScale, chords)
         drawCurve(curveRef, xScale, tensions, onCurveChange)
     })

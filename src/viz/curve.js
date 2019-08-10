@@ -3,8 +3,6 @@ import _ from 'lodash';
 import { baseLayout, makeSVG } from './util'
 
 // TO DO
-// - have curve and staff share x-axis?
-// - add new points
 // - fig out display on pointer *hover*
 
 export const drawCurve = (ref, xScale, tensions, onCurveChange) => {
@@ -38,13 +36,29 @@ export const drawCurve = (ref, xScale, tensions, onCurveChange) => {
         .attr("font-family", "sans-serif")
         .attr("font-size", "15px")
 
+    const addPoint = () => {
+        data = [...data, {color:0, dissonance:0, gravity:0}]
+        stacked = d3.stack().keys(groups)(data)
+        onCurveChange(data)
+    }
 
+    svg.append("g")
+        .attr("class", "pt")
+        .append("text")
+        .text(d => "\uf067")
+        .attr("x", 30)
+        .attr("y", yScale(0))
+        .attr("font-size", 15)
+        .attr("font-family", "FontAwesome")
+        .on("click", addPoint)  
     // draw axis
     // const axis = d3.axisLeft()
     //              .scale(yScale)
 
     // svg.append("g")
     //    .call(axis)
+
+    
 
     function activate(d) {
         let current = d3.select(this).classed("active")

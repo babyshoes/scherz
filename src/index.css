@@ -23,6 +23,9 @@ code {
   fill-opacity: 0.5
 }
 
+.pt {
+  cursor: pointer;
+}
 
 .pointer circle.active {
   r: 5.0;

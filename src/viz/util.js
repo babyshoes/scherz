@@ -16,14 +16,16 @@ const getxScale = (numTimesteps) => {
 
 }
 
-const makeSVG = (ref, layout) =>
-    d3.select(ref.current)
+const makeSVG = (ref, layout) => {
+    d3.select(ref.current).selectAll("*").remove()
+    return d3.select(ref.current)
         .append("svg")
         .attr("viewBox", `0 0 ${layout.maxW} ${layout.maxH}`)
         .attr("width", "100%")
         .attr("height", "100%")
         .append("g")
-        .attr("transform", "translate(" + layout.marginLeft + "," + layout.marginTop + ")");
+        .attr("transform", "translate(" + layout.marginLeft + "," + layout.marginTop + ")")
+};
 
 
 export { baseLayout, makeSVG, getxScale }

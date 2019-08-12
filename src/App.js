@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Left from './Left.js'
 import Options from './Options.js'
+import Spiral from './Spiral.js'
 import './App.css';
 
 const App = () => {
@@ -8,6 +9,7 @@ const App = () => {
   const { chords: ogChords, tensions: ogTensions }  = JSON.parse(jsonData)
   const [tensions, setTensions] = useState([ {color:0, dissonance:0, gravity:0}, ...ogTensions])
   const [chords, setChords] = useState(ogChords)
+  const [timestep, setTimestep] = useState(0)
   const [numTimesteps, setNumTimesteps] = useState(chords.length)
   const [scales, setScales] = useState(['major'])
   const [tonic, setTonic] = useState("c#")
@@ -43,6 +45,7 @@ const App = () => {
 
   return (
     <div className="App">
+      <Spiral chord={chords[timestep]}/>
       <Left 
         timestep={1}
         numTimesteps={numTimesteps}

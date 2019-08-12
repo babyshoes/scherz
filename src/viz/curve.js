@@ -118,11 +118,8 @@ export const drawCurve = (ref, xScale, tensions, onCurveChange) => {
                 .y0((d) => yScale(d[0]))
                 .y1((d) => yScale(d[1]))
             )
-            // .on("mouseover", displayDimensionInfo)
             .on("mousemove", displayDimensionInfo)
             .on("mouseout", clearDimensionInfo)
-            // .on('mouseover', dimensionTip.show)
-            // .on('mouseout', dimensionTip.hide)
     
 
     const dragStart = (d) =>{

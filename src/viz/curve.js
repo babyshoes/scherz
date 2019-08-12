@@ -2,9 +2,6 @@ import * as d3 from 'd3';
 import _ from 'lodash';
 import { baseLayout, makeSVG } from './util'
 
-// TO DO
-// - fig out display on pointer *hover*
-
 export const drawCurve = (ref, xScale, tensions, onCurveChange) => {
     let data = tensions
 
@@ -56,9 +53,7 @@ export const drawCurve = (ref, xScale, tensions, onCurveChange) => {
     //              .scale(yScale)
 
     // svg.append("g")
-    //    .call(axis)
-
-    
+    //    .call(axis)   
 
     function activate(d) {
         let current = d3.select(this).classed("active")
@@ -69,27 +64,32 @@ export const drawCurve = (ref, xScale, tensions, onCurveChange) => {
     }
 
     function displayDimensionInfo (d) {
-        const x = d3.event.type.startsWith("mouse") ? d3.mouse(this)[0] : d3.event.x
-        const mouseX = xScale.invert(x)
-        // console.log(x)
-        // if(d3.event.type==="mouseover"){
-        //     debugger
-        // }
-        // console.log(d3.event.type)
         legend.selectAll("tspan").remove()
         let string = `${d.key}`
         legend.append("tspan")
             .text(string) 
             .attr("font-weight", "bold")
 
-        if (Math.abs(mouseX - Math.round(mouseX)) < 0.1) {
-            const dimension = stacked.find(l => l.key === d.key)
-            const node = dimension[Math.round(mouseX)]
-            const nodeVal = node.data[d.key]
-            const description = `: ${nodeVal.toFixed(1)}`
-            legend.append("tspan")
-                .text(description)
-        }    
+        const dimension = stacked.find(l => l.key === d.key)
+        const event = d3.event
+
+        let node = null
+        if (event.type === "drag" || event.type === "start") {
+            node = dimension[event.subject.xPos]
+        } else if (this.nodeName === "circle") {
+            node = dimension[this.__data__.xPos]
+        } else if (this.nodeName === "path") {
+            const mouseX = xScale.invert(d3.mouse(this)[0])
+                if (Math.abs(mouseX - Math.round(mouseX)) < 0.1) {
+                    node = dimension[Math.round(mouseX)]
+                }
+        }
+
+        const description = node !== null ? `: ${node.data[d.key].toFixed(1)}` : ""
+
+        legend.append("tspan")
+            .text(description)
+
     } 
 
     const clearDimensionInfo = (d) => {
@@ -210,7 +210,6 @@ export const drawCurve = (ref, xScale, tensions, onCurveChange) => {
                     )
                 , exit => exit.remove()
             )
-            // .on("mouseover", displayDimensionInfo)
             .on("mousemove", displayDimensionInfo)
             .on("mouseout", clearDimensionInfo)
     }

@@ -45,6 +45,7 @@ const App = () => {
 
   return (
     <div className="App">
+      {/* <div margin-bottom= "20px"/> */}
       <Spiral chord={chords[timestep]}/>
       <Left 
         timestep={1}

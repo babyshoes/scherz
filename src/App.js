@@ -45,22 +45,26 @@ const App = () => {
 
   return (
     <div className="App">
-      {/* <div margin-bottom= "20px"/> */}
-      <Spiral chord={chords[timestep]}/>
-      <Left 
-        timestep={1}
-        numTimesteps={numTimesteps}
-        chords={chords}
-        tensions={tensions}
-        onCurveChange={onCurveChange}
-      />
-      <Options
-        selectedScales={scales}
-        tonic={tonic}
-        onScaleSelect={onScaleSelect}
-        onScaleRemove={onScaleRemove}
-        onTonicChange={onTonicChange}
-      />
+      <div className="left panel">
+        <Left 
+          className="panel"
+          timestep={1}
+          numTimesteps={numTimesteps}
+          chords={chords}
+          tensions={tensions}
+          onCurveChange={onCurveChange}
+        />
+      </div>
+      <div className="panel">
+        {/* <Spiral chord={chords[timestep]}/> */}
+        <Options
+          selectedScales={scales}
+          tonic={tonic}
+          onScaleSelect={onScaleSelect}
+          onScaleRemove={onScaleRemove}
+          onTonicChange={onTonicChange}
+        />
+      </div>
     </div>
   );
 }

@@ -1,12 +1,12 @@
 import * as d3 from 'd3';
 
 const baseLayout = { 
-    marginRight: 100, 
-    marginLeft: 50, 
+    marginRight: 10, 
+    marginLeft: 100, 
     maxW: 1000,
 }
 
-baseLayout.xstart = baseLayout.marginRight + 10
+baseLayout.xstart = baseLayout.marginLeft + 10
 baseLayout.width = baseLayout.maxW - baseLayout.marginLeft - baseLayout.marginRight
 
 const getxScale = (numTimesteps) => {

@@ -80,12 +80,13 @@ const getSpiralPoints = (topY, bottomY) => {
     return spiralPoints
 }
 
-function AnchorPoint(scene, x, y, z) {
+function AnchorPoint(scene, x, y, z, pitch) {
     const geometry = new THREE.SphereGeometry(
         0.1, 20, 20);
     const material = new THREE.MeshBasicMaterial({ color: 0x377eb8 });
     const mesh = new THREE.Mesh(geometry, material);
 
+    mesh.name = pitch
     mesh.position.set(x, y, z);
     scene.add(mesh)
 
@@ -93,6 +94,7 @@ function AnchorPoint(scene, x, y, z) {
    
 }
 
+// https://codepen.io/dxinteractive/pen/reNpOR
 function createTextLabel() {
     const textDiv = document.createElement('div')
     textDiv.className = "note-label"
@@ -111,7 +113,7 @@ function createTextLabel() {
         setParent: function (mesh){this.parent = mesh},
         updatePosition: function (camera) {
             if (this.parent) {
-                console.log(this.parent.position)
+                // console.log(this.parent.position)
                 this.position.copy(this.parent.position)
             }
             var coords2d = this.get2DCoords(this.position, camera);
@@ -134,9 +136,10 @@ const noteMarkers = (scene, points, ref, camera) => {
     let labels = []
     for (let i=0; i<24; i++) {
         let numPt = 2400 * i / 24
-        let ptMesh = AnchorPoint(scene, points[numPt].x, points[numPt].y, points[numPt].z)
+        let pitch = circleOfFifths[i] || ""
+        let ptMesh = AnchorPoint(scene, points[numPt].x, points[numPt].y, points[numPt].z, pitch)
         let label = createTextLabel()
-        label.setHTML(circleOfFifths[i] || "")
+        label.setHTML(pitch)
         label.setParent(ptMesh)  
         ref.current.appendChild(label.element)
         label.updatePosition(camera)
@@ -145,6 +148,35 @@ const noteMarkers = (scene, points, ref, camera) => {
     }
 
     return [markers, labels]
+}
+
+const getVectors = (noteMarkers, chord) => {
+    return chord.pitches.map((pitch, i) => 
+        noteMarkers.find((marker, index) => {
+            const octave = chord.notes[i] - 72
+            return pitch.toLowerCase() === marker.name.toLowerCase() // && index >= (octave * 12)
+        }).position
+    )
+}
+
+const chordPlane = (scene, noteMarkers, chord) => {
+    // TO DO: remove doctoring 
+    chord.pitches = ['C', 'G', 'E', 'B']
+    const chordVectors = getVectors(noteMarkers, chord)
+
+    var geometry = new THREE.Geometry()
+    geometry.vertices.push(...chordVectors)
+    geometry.faces.push(new THREE.Face3(2, 1, 0), new THREE.Face3(3, 2, 0))
+    var material = new THREE.MeshBasicMaterial( {
+        color:0x00ff00, 
+        side:THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.5 } 
+    )
+
+    const mesh = new THREE.Mesh(geometry, material)
+
+    scene.add(mesh)
 }
 
 export const drawSpiral = (chord, ref) => {
@@ -162,7 +194,7 @@ export const drawSpiral = (chord, ref) => {
     var renderer = buildRenderer(width, height)
     ref.current.appendChild( renderer.domElement )
     var controls = new OrbitControls(camera,ref.current)
-    // const lights = buildLights(scene);
+    const lights = buildLights(scene);
     
     
     // debugger
@@ -184,23 +216,22 @@ export const drawSpiral = (chord, ref) => {
 
 
     var points = curve.getPoints( 2400 );
-    console.log("catmull points")
-    console.log(points)
+    // console.log("catmull points")
+    // console.log(points)
     
     var geometry = new THREE.BufferGeometry().setFromPoints( points );
 
     var material = new THREE.LineBasicMaterial( { color : 0xff0000 } );
 
-    // Create the final object to add to the scene
     var curveObject = new THREE.Line( geometry, material );
 
     scene.add(curveObject)
     const [markers, labels] = noteMarkers(scene, points, ref, camera)
-    // debugger
-    
+    chordPlane(scene, markers, chord)
+
     function animate() {
         requestAnimationFrame( animate );
-        // debugger
+
         if (labels) {labels.forEach(l => l.updatePosition(camera))}
         
         renderer.render( scene, camera );

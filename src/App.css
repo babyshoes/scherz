@@ -33,7 +33,7 @@
 }
 
 .left {
-  flex: 3;
+  flex: 2;
 }
 
 @keyframes App-logo-spin {

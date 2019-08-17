@@ -56,14 +56,15 @@ const App = () => {
         />
       </div>
       <div className="panel">
-        {/* <Spiral chord={chords[timestep]}/> */}
-        <Options
+        
+        {/* <Options
           selectedScales={scales}
           tonic={tonic}
           onScaleSelect={onScaleSelect}
           onScaleRemove={onScaleRemove}
           onTonicChange={onTonicChange}
-        />
+        /> */}
+        <Spiral chord={chords[timestep]}/>
       </div>
     </div>
   );

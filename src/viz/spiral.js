@@ -7,6 +7,14 @@ import * as THREE from 'three'
 
 const circleOfFifths = ['C', 'G', 'D', 'A', 'E', 'B', 'Gb', 'Db', 'Ab', 'Eb', 'Bb', 'F']
 
+// TO DO:
+// get spiral to resize
+function onResize() {
+    this.camera.aspect = window.innerWidth / window.innerHeight;
+    this.camera.updateProjectionMatrix();
+    this.renderer.setSize(window.innerWidth, window.innerHeight);
+  }
+
 const buildScene = () => {
     const scene = new THREE.Scene();
     scene.background = new THREE.Color("white");
@@ -17,6 +25,7 @@ const buildScene = () => {
 const buildCamera = (width, height) => {
     const fov = 45
     const aspectRatio = width/height
+    console.log(width, height)
     const nearPlane = 1
     const farPlane = 500
 
@@ -33,25 +42,6 @@ const buildRenderer = (width, height) => {
     renderer.setSize(width, height);
 
     return renderer
-}
-
-function buildLights(scene) {
-    // distance, x, y, z
-    const cameraParams = [
-        [0, 50, 0, -50],
-        [0, -50, 0, -50],
-        [0, 0, 0, 50],
-        [0, 0, -100, 0],
-        [0, 0, 100, 0]
-    ]
-    
-    const lights = cameraParams.map( 
-        cp => {
-            const light = new THREE.PointLight(1, "#ffffff", ...cp)
-            scene.add(light)
-        }
-    )
-    return lights
 }
 
 let getRadius = function(pointList,y) {
@@ -95,7 +85,7 @@ function AnchorPoint(scene, x, y, z, pitch) {
 }
 
 // https://codepen.io/dxinteractive/pen/reNpOR
-function createTextLabel() {
+function createTextLabel(ref) {
     const textDiv = document.createElement('div')
     textDiv.className = "note-label"
     textDiv.style.position = "absolute"
@@ -109,11 +99,11 @@ function createTextLabel() {
         element: textDiv,
         parent: null,
         position: new THREE.Vector3(0,0,0),
+        ref: ref,
         setHTML: function (html) {this.element.innerHTML = html},
         setParent: function (mesh){this.parent = mesh},
-        updatePosition: function (camera) {
+        updatePosition: function (camera, ref) {
             if (this.parent) {
-                // console.log(this.parent.position)
                 this.position.copy(this.parent.position)
             }
             var coords2d = this.get2DCoords(this.position, camera);
@@ -122,9 +112,14 @@ function createTextLabel() {
             
         },
         get2DCoords: function(position, camera) {
-            var vector = position.project(camera);
-            vector.x = (vector.x + 1)/2 * window.innerWidth;
-            vector.y = -(vector.y - 1)/2 * window.innerHeight;
+            var width = this.ref.current.offsetWidth
+            var height = this.ref.current.offsetHeight
+            var vector = position.project(camera)
+   
+            // since it's an absolute position, gotta account for flexbox width of left side
+            vector.x = (vector.x + 1)/2 * width + (width*2)
+            vector.y = -(vector.y - 1)/2 * height
+
             return vector;
         }
         
@@ -138,11 +133,11 @@ const noteMarkers = (scene, points, ref, camera) => {
         let numPt = 2400 * i / 24
         let pitch = circleOfFifths[i] || ""
         let ptMesh = AnchorPoint(scene, points[numPt].x, points[numPt].y, points[numPt].z, pitch)
-        let label = createTextLabel()
+        let label = createTextLabel(ref)
         label.setHTML(pitch)
         label.setParent(ptMesh)  
         ref.current.appendChild(label.element)
-        label.updatePosition(camera)
+        label.updatePosition(camera, ref)
         markers.push(ptMesh)
         labels.push(label)
     }
@@ -150,7 +145,7 @@ const noteMarkers = (scene, points, ref, camera) => {
     return [markers, labels]
 }
 
-const getVectors = (noteMarkers, chord) => {
+const getVector3s = (noteMarkers, chord) => {
     return chord.pitches.map((pitch, i) => 
         noteMarkers.find((marker, index) => {
             const octave = chord.notes[i] - 72
@@ -159,15 +154,15 @@ const getVectors = (noteMarkers, chord) => {
     )
 }
 
-const chordPlane = (scene, noteMarkers, chord) => {
+const drawChordPlane = (scene, noteMarkers, chord) => {
     // TO DO: remove doctoring 
     chord.pitches = ['C', 'G', 'E', 'B']
-    const chordVectors = getVectors(noteMarkers, chord)
+    const chordVector3s = getVector3s(noteMarkers, chord)
 
-    var geometry = new THREE.Geometry()
-    geometry.vertices.push(...chordVectors)
+    const geometry = new THREE.Geometry()
+    geometry.vertices.push(...chordVector3s)
     geometry.faces.push(new THREE.Face3(2, 1, 0), new THREE.Face3(3, 2, 0))
-    var material = new THREE.MeshBasicMaterial( {
+    const material = new THREE.MeshBasicMaterial( {
         color:0x00ff00, 
         side:THREE.DoubleSide,
         transparent: true,
@@ -175,8 +170,22 @@ const chordPlane = (scene, noteMarkers, chord) => {
     )
 
     const mesh = new THREE.Mesh(geometry, material)
-
     scene.add(mesh)
+    return mesh
+}
+
+const drawSpiralMesh = (scene) => {
+    var spiralPoints = getSpiralPoints(5, -5)
+    var curve = new THREE.CatmullRomCurve3(spiralPoints)
+
+    var points = curve.getPoints( 2400 );
+    var geometry = new THREE.BufferGeometry().setFromPoints( points );
+    var material = new THREE.LineBasicMaterial( { color : 0xff0000 } );
+    var curveObject = new THREE.Line( geometry, material );
+
+    scene.add(curveObject)
+
+    return [points, curveObject]
 }
 
 export const drawSpiral = (chord, ref) => {
@@ -185,58 +194,33 @@ export const drawSpiral = (chord, ref) => {
     // ref.current.width  = ref.current.offsetWidth;
     // ref.current.height = ref.current.offsetHeight;
     // debugger
-    const width = window.innerWidth
-    const height = window.innerHeight
-    const scene = buildScene()
-    // var axesHelper = new THREE.AxesHelper( 5 );
-    // scene.add( axesHelper )
-    const camera = buildCamera(width, height)
-    var renderer = buildRenderer(width, height)
-    ref.current.appendChild( renderer.domElement )
-    var controls = new OrbitControls(camera,ref.current)
-    const lights = buildLights(scene);
-    
-    
+    // const width = window.innerWidth
+    // const height = window.innerHeight
     // debugger
-    
+    const width = ref.current.offsetWidth
+    const height = ref.current.offsetHeight
+    const scene = buildScene()
 
-    const anchorPointList = [[5, 5], [5, 0], [5, -5]]
-    let curvePointList=[]
+    const camera = buildCamera(width, height)
+    const renderer = buildRenderer(width, height)
+    ref.current.appendChild( renderer.domElement )
+    const controls = new OrbitControls(camera,ref.current)
 
-    anchorPointList.forEach(element => {
-        let newPoint = new THREE.Vector2(element[0], element[1]);   
-        curvePointList.push(newPoint);
-    });
+    // const [points, spiralMesh] = drawSpiralMesh(scene)
+    // const [markers, labels] = noteMarkers(scene, points, ref, camera)
+    // const chordPlane = drawChordPlane(scene, markers, chord)
 
-    var latheCurve = new THREE.SplineCurve(curvePointList)
-    // console.log(latheCurve)
-    // var spiralPoints = getSpiralPoints(latheCurve)
-    var spiralPoints = getSpiralPoints(5, -5)
-    var curve = new THREE.CatmullRomCurve3(spiralPoints)
-
-
-    var points = curve.getPoints( 2400 );
-    // console.log("catmull points")
-    // console.log(points)
-    
-    var geometry = new THREE.BufferGeometry().setFromPoints( points );
-
-    var material = new THREE.LineBasicMaterial( { color : 0xff0000 } );
-
-    var curveObject = new THREE.Line( geometry, material );
-
-    scene.add(curveObject)
-    const [markers, labels] = noteMarkers(scene, points, ref, camera)
-    chordPlane(scene, markers, chord)
-
-    function animate() {
-        requestAnimationFrame( animate );
-
-        if (labels) {labels.forEach(l => l.updatePosition(camera))}
+    // function animate() {
+    //     requestAnimationFrame( animate );
         
-        renderer.render( scene, camera );
-        
-    }
-    animate();
+    //     console.log(ref.current.offsetWidth, ref.current.offsetHeight)
+    //     camera.aspect = ref.current.offsetWidth / ref.current.offsetHeight
+    //     camera.updateProjectionMatrix()
+    //     // renderer.setSize(ref.current.offsetWidth, ref.current.offsetHeight)
+    //     if (labels) {labels.forEach(l => l.updatePosition(camera))}
+    //     renderer.render( scene, camera )
+
+    // }
+    // animate();
 }
 

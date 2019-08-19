@@ -27,13 +27,23 @@
 
 .panel {
   align-items: center;
-  flex: 1;
+  flex: 2;
   /* display: flex; */
   flex-direction: column;
 }
 
 .left {
-  flex: 2;
+  flex: 4;
+}
+
+.header {
+  /* align-items: flex-start; */
+  align-items: stretch;
+  flex: 0.5;
+  display: flex;
+  flex-direction: row;
+  font-size: 3em;
+  padding-left: 10px;
 }
 
 @keyframes App-logo-spin {

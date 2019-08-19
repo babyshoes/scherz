@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Header from './Header.js'
 import Left from './Left.js'
 import Options from './Options.js'
 import Spiral from './Spiral.js'
@@ -13,6 +14,8 @@ const App = () => {
   const [numTimesteps, setNumTimesteps] = useState(chords.length)
   const [scales, setScales] = useState(['major'])
   const [tonic, setTonic] = useState("c#")
+  const [play, setPlay] = useState(false)
+
 
   const onCurveChange = (t) => {
     setTensions(t)
@@ -43,9 +46,17 @@ const App = () => {
     // setChords(chords)
   }
 
+  const onStatusChange = () => {
+    setPlay(!play)
+    console.log(play)
+  }
+
 
   return (
     <div className="App">
+      <div className="header panel">
+        <Header status={play} onStatusChange={onStatusChange}/>
+      </div>
       <div className="left panel">
         <Left 
           className="panel"
@@ -56,7 +67,7 @@ const App = () => {
           onCurveChange={onCurveChange}
         />
       </div>
-      <div className="panel">
+      <div className="right panel">
         
         {/* <Options
           selectedScales={scales}

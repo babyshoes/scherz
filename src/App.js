@@ -43,6 +43,7 @@ const App = () => {
     // setChords(chords)
   }
 
+
   return (
     <div className="App">
       <div className="left panel">

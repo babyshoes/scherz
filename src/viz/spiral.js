@@ -7,14 +7,6 @@ import * as THREE from 'three'
 
 const circleOfFifths = ['C', 'G', 'D', 'A', 'E', 'B', 'Gb', 'Db', 'Ab', 'Eb', 'Bb', 'F']
 
-// TO DO:
-// get spiral to resize
-function onResize() {
-    this.camera.aspect = window.innerWidth / window.innerHeight;
-    this.camera.updateProjectionMatrix();
-    this.renderer.setSize(window.innerWidth, window.innerHeight);
-  }
-
 const buildScene = () => {
     const scene = new THREE.Scene();
     scene.background = new THREE.Color("white");
@@ -90,10 +82,6 @@ function createTextLabel(ref) {
     textDiv.className = "note-label"
     textDiv.style.position = "absolute"
     textDiv.style.fontSize = "0.75em"
-    // textDiv.style.width = 100;
-    // textDiv.style.height = 100;
-    // textDiv.style.top = -1000;
-    // textDiv.style.left = -1000;
 
     return {
         element: textDiv,
@@ -174,6 +162,10 @@ const drawChordPlane = (scene, noteMarkers, chord) => {
     return mesh
 }
 
+const removeChordPlane = () => {
+
+}
+
 const drawSpiralMesh = (scene) => {
     var spiralPoints = getSpiralPoints(5, -5)
     var curve = new THREE.CatmullRomCurve3(spiralPoints)
@@ -188,39 +180,52 @@ const drawSpiralMesh = (scene) => {
     return [points, curveObject]
 }
 
+const buildControls = (camera, container) => {
+    const controls = new OrbitControls(camera, container)
+    controls.enableZoom = false;
+    return controls
+}
+
+const handleWindowResize = (ref, camera, renderer) => () => {
+    const width = ref.current.clientWidth;
+    const height = ref.current.clientHeight;
+
+    renderer.setSize( width, height );
+    renderer.domElement.style.width = '100%'
+    renderer.domElement.style.height = '100%'
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+    
+}
+
 export const drawSpiral = (chord, ref) => {
     ref.current.style.width = '100%'
     ref.current.style.height = '100%'
-    // ref.current.width  = ref.current.offsetWidth;
-    // ref.current.height = ref.current.offsetHeight;
-    // debugger
-    // const width = window.innerWidth
-    // const height = window.innerHeight
-    // debugger
     const width = ref.current.offsetWidth
     const height = ref.current.offsetHeight
     const scene = buildScene()
 
     const camera = buildCamera(width, height)
     const renderer = buildRenderer(width, height)
+    
     ref.current.appendChild( renderer.domElement )
-    const controls = new OrbitControls(camera,ref.current)
+    renderer.domElement.style.width = '100%'
+    renderer.domElement.style.height = '100%'
+    
+    const controls = buildControls(camera, ref.current)
 
-    // const [points, spiralMesh] = drawSpiralMesh(scene)
-    // const [markers, labels] = noteMarkers(scene, points, ref, camera)
-    // const chordPlane = drawChordPlane(scene, markers, chord)
+    const [points, spiralMesh] = drawSpiralMesh(scene)
+    const [markers, labels] = noteMarkers(scene, points, ref, camera)
+    const chordPlane = drawChordPlane(scene, markers, chord)
 
-    // function animate() {
-    //     requestAnimationFrame( animate );
+    window.addEventListener('resize', handleWindowResize(ref, camera, renderer))
+    function animate() {
+        requestAnimationFrame( animate );
         
-    //     console.log(ref.current.offsetWidth, ref.current.offsetHeight)
-    //     camera.aspect = ref.current.offsetWidth / ref.current.offsetHeight
-    //     camera.updateProjectionMatrix()
-    //     // renderer.setSize(ref.current.offsetWidth, ref.current.offsetHeight)
-    //     if (labels) {labels.forEach(l => l.updatePosition(camera))}
-    //     renderer.render( scene, camera )
+        if (labels) {labels.forEach(l => l.updatePosition(camera))}
+        renderer.render( scene, camera )
 
-    // }
-    // animate();
+    }
+    animate();
 }
 

@@ -7,6 +7,8 @@ import * as THREE from 'three'
 
 const circleOfFifths = ['C', 'G', 'D', 'A', 'E', 'B', 'Gb', 'Db', 'Ab', 'Eb', 'Bb', 'F']
 
+// TO DO: 
+// - make line weight and label text size dynamic
 const buildScene = () => {
     const scene = new THREE.Scene();
     scene.background = new THREE.Color("white");
@@ -17,7 +19,6 @@ const buildScene = () => {
 const buildCamera = (width, height) => {
     const fov = 45
     const aspectRatio = width/height
-    console.log(width, height)
     const nearPlane = 1
     const farPlane = 500
 
@@ -62,7 +63,7 @@ const calculateSpiralPoints = (topY, bottomY) => {
     return spiralPoints
 }
 
-function AnchorPoint(scene, x, y, z, pitch) {
+const drawMarker = (scene, x, y, z, pitch) => {
     const geometry = new THREE.SphereGeometry(
         0.1, 20, 20);
     const material = new THREE.MeshBasicMaterial({ color: 0x377eb8 });
@@ -73,11 +74,23 @@ function AnchorPoint(scene, x, y, z, pitch) {
     scene.add(mesh)
 
     return mesh
-   
+}
+
+
+const drawNoteMarkers = (scene, points) => {
+    let markers = []
+    for (let i=0; i<24; i++) {
+        let numPt = 2400 * i / 24
+        let pitch = circleOfFifths[i] || ""
+        let ptMesh = drawMarker(scene, points[numPt].x, points[numPt].y, points[numPt].z, pitch)
+        markers.push(ptMesh)
+    }
+
+    return markers
 }
 
 // https://codepen.io/dxinteractive/pen/reNpOR
-function textLabel(ref) {
+const textLabel = function(ref) {
     const textDiv = document.createElement('div')
     textDiv.className = "note-label"
     textDiv.style.position = "absolute"
@@ -111,28 +124,6 @@ function textLabel(ref) {
             return vector;
         }        
     }
-}
-
-// const noteMarkers = (scene, points, ref, camera) => {
-const drawNoteMarkers = (scene, points) => {
-    let markers = []
-    // let labels = []
-    for (let i=0; i<24; i++) {
-        let numPt = 2400 * i / 24
-        let pitch = circleOfFifths[i] || ""
-        let ptMesh = AnchorPoint(scene, points[numPt].x, points[numPt].y, points[numPt].z, pitch)
-        
-        // let label = textLabel(ref)
-        // label.setHTML(pitch)
-        // label.setParent(ptMesh)  
-        // ref.current.appendChild(label.element)
-        // label.updatePosition(camera, ref)
-        markers.push(ptMesh)
-        // labels.push(label)
-    }
-
-    return markers
-    // return [markers, labels]
 }
 
 const createTextLabels = (ref, camera, markers) => {
@@ -224,6 +215,7 @@ export const drawSpiral = function (chord, ref) {
     ref.current.style.height = '100%'
     const width = ref.current.offsetWidth
     const height = ref.current.offsetHeight
+
     const scene = buildScene()
     const camera = buildCamera(width, height)
     const renderer = buildRenderer(ref, width, height)
@@ -255,34 +247,4 @@ export const drawSpiral = function (chord, ref) {
     }
 }
 
-// export const drawSpiral = (chord, ref) => {
-//     ref.current.style.width = '100%'
-//     ref.current.style.height = '100%'
-//     const width = ref.current.offsetWidth
-//     const height = ref.current.offsetHeight
-//     const scene = buildScene()
-
-//     const camera = buildCamera(width, height)
-//     const renderer = buildRenderer(width, height)
-    
-//     ref.current.appendChild( renderer.domElement )
-//     renderer.domElement.style.width = '100%'
-//     renderer.domElement.style.height = '100%'
-    
-//     const controls = buildControls(camera, ref.current)
-
-//     const [points, spiralMesh] = drawSpiralMesh(scene)
-//     const [markers, labels] = noteMarkers(scene, points, ref, camera)
-//     const chordPlane = drawChordPlane(scene, markers, chord)
-
-//     window.addEventListener('resize', handleWindowResize(ref, camera, renderer))
-//     function animate() {
-//         requestAnimationFrame( animate );
-        
-//         if (labels) {labels.forEach(l => l.updatePosition(camera))}
-//         renderer.render( scene, camera )
-
-//     }
-//     animate();
-// }
 

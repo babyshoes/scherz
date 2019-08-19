@@ -7,6 +7,14 @@ import * as THREE from 'three'
 
 const circleOfFifths = ['C', 'G', 'D', 'A', 'E', 'B', 'Gb', 'Db', 'Ab', 'Eb', 'Bb', 'F']
 
+// TO DO:
+// get spiral to resize
+// function onResize() {
+//     this.camera.aspect = window.innerWidth / window.innerHeight;
+//     this.camera.updateProjectionMatrix();
+//     this.renderer.setSize(window.innerWidth, window.innerHeight);
+//   }
+
 const buildScene = () => {
     const scene = new THREE.Scene();
     scene.background = new THREE.Color("white");
@@ -27,20 +35,20 @@ const buildCamera = (width, height) => {
     return camera
 }
 
-const buildRenderer = (ref, width, height) => {
+const buildRenderer = (width, height) => {
     const renderer = new THREE.WebGLRenderer();
     const DPR = (window.devicePixelRatio) ? window.devicePixelRatio : 1;
     renderer.setPixelRatio(DPR);
     renderer.setSize(width, height);
 
-    ref.current.appendChild(renderer.domElement)
-    renderer.domElement.style.width = '100%'
-    renderer.domElement.style.height = '100%'
-
     return renderer
 }
 
-const calculateSpiralPoints = (topY, bottomY) => {
+let getRadius = function(pointList,y) {
+    return pointList.find(pt => y >= pt.y).x
+}
+
+const getSpiralPoints = (topY, bottomY) => {
     const stepsPerRev = 120
     const radian = (Math.PI * 2) / stepsPerRev
 
@@ -77,11 +85,15 @@ function AnchorPoint(scene, x, y, z, pitch) {
 }
 
 // https://codepen.io/dxinteractive/pen/reNpOR
-function textLabel(ref) {
+function createTextLabel(ref) {
     const textDiv = document.createElement('div')
     textDiv.className = "note-label"
     textDiv.style.position = "absolute"
     textDiv.style.fontSize = "0.75em"
+    // textDiv.style.width = 100;
+    // textDiv.style.height = 100;
+    // textDiv.style.top = -1000;
+    // textDiv.style.left = -1000;
 
     return {
         element: textDiv,
@@ -109,41 +121,29 @@ function textLabel(ref) {
             vector.y = -(vector.y - 1)/2 * height
 
             return vector;
-        }        
+        }
+        
     }
 }
 
-// const noteMarkers = (scene, points, ref, camera) => {
-const drawNoteMarkers = (scene, points) => {
+const noteMarkers = (scene, points, ref, camera) => {
     let markers = []
-    // let labels = []
+    let labels = []
     for (let i=0; i<24; i++) {
         let numPt = 2400 * i / 24
         let pitch = circleOfFifths[i] || ""
-        let ptMesh = AnchorPoint(scene, points[numPt].x, points[numPt].y, points[numPt].z, pitch)
         
-        // let label = textLabel(ref)
-        // label.setHTML(pitch)
-        // label.setParent(ptMesh)  
-        // ref.current.appendChild(label.element)
-        // label.updatePosition(camera, ref)
-        markers.push(ptMesh)
-        // labels.push(label)
-    }
-
-    return markers
-    // return [markers, labels]
-}
-
-const createTextLabels = (ref, camera, markers) => {
-    return markers.map(ptMesh => {
-        const label = textLabel(ref)
-        label.setHTML(ptMesh.name)
-        label.setParent(ptMesh) 
+        let ptMesh = AnchorPoint(scene, points[numPt].x, points[numPt].y, points[numPt].z, pitch)
+        let label = createTextLabel(ref)
+        label.setHTML(pitch)
+        label.setParent(ptMesh)  
         ref.current.appendChild(label.element)
         label.updatePosition(camera, ref)
-        return label
-    })
+        markers.push(ptMesh)
+        labels.push(label)
+    }
+
+    return [markers, labels]
 }
 
 const getVector3s = (noteMarkers, chord) => {
@@ -175,24 +175,11 @@ const drawChordPlane = (scene, noteMarkers, chord) => {
     return mesh
 }
 
-const removeLabels = (ref) => {
-    ref.current.childNodes.forEach(n => { 
-        if(n.className === "note-label") {
-            ref.current.removeChild(n)
-        }
-    })
-}
+const drawSpiralMesh = (scene) => {
+    var spiralPoints = getSpiralPoints(5, -5)
+    var curve = new THREE.CatmullRomCurve3(spiralPoints)
 
-const removeChordPlane = (scene, chordPlaneMesh) => {
-    scene.remove(chordPlaneMesh)
-}
-
-const getCatmullPoints = () => {
-    const spiralPoints = calculateSpiralPoints(5, -5)
-    const curve = new THREE.CatmullRomCurve3(spiralPoints)
-    return curve.getPoints(2400)
-}
-const drawSpiralMesh = (scene, points) => {
+    var points = curve.getPoints( 2400 );
     var geometry = new THREE.BufferGeometry().setFromPoints( points );
     var material = new THREE.LineBasicMaterial( { color : 0xff0000 } );
     var curveObject = new THREE.Line( geometry, material );
@@ -203,86 +190,67 @@ const drawSpiralMesh = (scene, points) => {
 }
 
 const buildControls = (camera, container) => {
+    // debugger
     const controls = new OrbitControls(camera, container)
     controls.enableZoom = false;
     return controls
 }
 
-const handleWindowResize = (ref, camera, renderer) => () => {
-    const width = ref.current.clientWidth;
-    const height = ref.current.clientHeight;
+const spiralViewer = {
+    scene: false,
+    camera: false,
+    controls: false,
+    renderer: false,
+    container: false,
+    spiralMesh: false,
+    points: false,
+    markers: false,
+    labels: false,
 
-    renderer.setSize( width, height );
-    renderer.domElement.style.width = '100%'
-    renderer.domElement.style.height = '100%'
-    camera.aspect = width / height;
-    camera.updateProjectionMatrix();
+    
+    onReady: function(chord, ref) {
+        this.ref = ref
+        const width = this.ref.current.offsetWidth
+        const height = this.ref.current.offsetHeight
+        
+        this.scene = buildScene()
+        this.camera = buildCamera(width, height)
+        this.renderer = buildRenderer(width, height)
+        this.controls = buildControls(this.camera, this.ref.current)
+
+        this.ref.current.appendChild( spiralViewer.renderer.domElement )
+
+        const [points, spiralMesh] = drawSpiralMesh(this.scene)
+        const [markers, labels] = noteMarkers(this.scene, points, this.ref, this.camera)
+        this.chordPlane = drawChordPlane(this.scene, markers, chord)
+        this.labels = labels
+        const animate = function() {
+            if (this.labels) {
+                this.labels.forEach(l => l.updatePosition(this.camera))
+            }
+            this.renderer.render( this.scene, this.camera )
+        }.bind(this)
+        animate()
+    },
+
+    onResize: function() {
+        const width = this.ref.current.offsetWidth
+        const height = this.ref.current.offsetHeight
+        console.log(width, height)
+        this.renderer.setSize( width, height );
+        this.camera.aspect = width / height;
+        this.camera.updateProjectionMatrix();
+    },
 }
 
-export const drawSpiral = function (chord, ref) {
+export const drawSpiral = (chord, ref) => {
     ref.current.style.width = '100%'
     ref.current.style.height = '100%'
-    const width = ref.current.offsetWidth
-    const height = ref.current.offsetHeight
-    const scene = buildScene()
-    const camera = buildCamera(width, height)
-    const renderer = buildRenderer(ref, width, height)
-    const controls = buildControls(camera, ref.current)
-
-    const points = getCatmullPoints()
-    const spiralMesh = drawSpiralMesh(scene, points)
-    const markers = drawNoteMarkers(scene, points)
-    const labels = createTextLabels(ref, camera, markers)
-
-    const chordPlane = drawChordPlane(scene, markers, chord)
-    window.addEventListener('resize', handleWindowResize(ref, camera, renderer))
     
-    function animate() {
-        requestAnimationFrame( animate );
-        if (labels) {labels.forEach(l => l.updatePosition(camera))}
-        renderer.render( scene, camera )
-    }
+    spiralViewer.onReady(chord, ref)
+    window.addEventListener('resize', function(){
+        spiralViewer.onResize()
+    }, false)
 
-    animate()
-
-    return {
-        updateChordPlane: function(chord) {
-            removeLabels(ref)
-            removeChordPlane(scene, chordPlane)
-            labels = createTextLabels(ref, camera, markers)
-            chordPlane = drawChordPlane(scene, markers, chord)
-        }   
-    }
 }
-
-// export const drawSpiral = (chord, ref) => {
-//     ref.current.style.width = '100%'
-//     ref.current.style.height = '100%'
-//     const width = ref.current.offsetWidth
-//     const height = ref.current.offsetHeight
-//     const scene = buildScene()
-
-//     const camera = buildCamera(width, height)
-//     const renderer = buildRenderer(width, height)
-    
-//     ref.current.appendChild( renderer.domElement )
-//     renderer.domElement.style.width = '100%'
-//     renderer.domElement.style.height = '100%'
-    
-//     const controls = buildControls(camera, ref.current)
-
-//     const [points, spiralMesh] = drawSpiralMesh(scene)
-//     const [markers, labels] = noteMarkers(scene, points, ref, camera)
-//     const chordPlane = drawChordPlane(scene, markers, chord)
-
-//     window.addEventListener('resize', handleWindowResize(ref, camera, renderer))
-//     function animate() {
-//         requestAnimationFrame( animate );
-        
-//         if (labels) {labels.forEach(l => l.updatePosition(camera))}
-//         renderer.render( scene, camera )
-
-//     }
-//     animate();
-// }
 

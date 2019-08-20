@@ -2,7 +2,7 @@ import * as d3 from 'd3';
 
 const baseLayout = { 
     marginRight: 10, 
-    marginLeft: 100, 
+    marginLeft: 50, 
     maxW: 1000,
 }
 

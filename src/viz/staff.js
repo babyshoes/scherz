@@ -63,8 +63,6 @@ export const drawStaff = (ref, timestep, xScale, chords) => {
             console.log("notes and pitches unequal length")
         }
     })
-
-    debugger
               
     const getOffset = (note, {note: prevNote, offset: prevOffset}) => {
         const diff = note - prevNote

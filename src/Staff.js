@@ -1,39 +1,41 @@
-import React, { useLayoutEffect, useRef } from 'react';
-import { drawStaff } from './viz/staff'
-import './App.css';
+// obsolete. see Left
 
-export default function Staff ({timestep, numTimesteps, chords}) {
-    // const [height, setHeight] = useState(0)
-    const ref = useRef(null)
+// import React, { useLayoutEffect, useRef } from 'react';
+// import { drawStaff } from './viz/staff'
+// import './App.css';
 
-    useLayoutEffect(() => {
-        // setHeight(ref.current.clientHeight)
-        drawStaff(ref, timestep, numTimesteps, chords)
-    })
+// export default function Staff ({timestep, numTimesteps, chords}) {
+//     // const [height, setHeight] = useState(0)
+//     const ref = useRef(null)
 
-    // useEffect(() => {
-    //     drawStaff(ref, timestep, numTimesteps, chords)
-    // })
+//     useLayoutEffect(() => {
+//         // setHeight(ref.current.clientHeight)
+//         drawStaff(ref, timestep, numTimesteps, chords)
+//     })
 
-    return (
-        <div ref={ref} id="staff-viz"/>
-    )
+//     // useEffect(() => {
+//     //     drawStaff(ref, timestep, numTimesteps, chords)
+//     // })
 
-} 
+//     return (
+//         <div ref={ref} id="staff-viz"/>
+//     )
+
+// } 
  
-// export default class Staff extends Component {   
+// // export default class Staff extends Component {   
 
-//     componentDidMount() {
-//         drawStaff(this.props)
-//     };
+// //     componentDidMount() {
+// //         drawStaff(this.props)
+// //     };
 
-//     componentDidUpdate() {
-//         drawStaff(this.props)
-//     };
+// //     componentDidUpdate() {
+// //         drawStaff(this.props)
+// //     };
 
-//     render(){ 
-//         return (
-//             <div id="staff-viz"/>
-//         );
-//     }
-//   }
+// //     render(){ 
+// //         return (
+// //             <div id="staff-viz"/>
+// //         );
+// //     }
+// //   }

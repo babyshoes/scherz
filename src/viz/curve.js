@@ -2,7 +2,7 @@ import * as d3 from 'd3';
 import _ from 'lodash';
 import { baseLayout, makeSVG } from './util'
 
-export const drawCurve = (ref, xScale, tensions, onCurveChange) => {
+export const drawCurve = (ref, xScale, tensions, onCurveChange, active, onActiveChange) => {
     let data = tensions
 
     const groups = ["color", "dissonance", "gravity"]
@@ -55,11 +55,12 @@ export const drawCurve = (ref, xScale, tensions, onCurveChange) => {
     // svg.append("g")
     //    .call(axis)   
 
-    function activate(d) {
+    function activate(d) {    
         let current = d3.select(this).classed("active")
         d3.selectAll("path.curve.active").classed("active", false)
         d3.select(this).classed("active", !current)
 
+        onActiveChange(d.key)
         updatePointers(stacked)
     }
 
@@ -89,7 +90,6 @@ export const drawCurve = (ref, xScale, tensions, onCurveChange) => {
 
         legend.append("tspan")
             .text(description)
-
     } 
 
     const clearDimensionInfo = (d) => {
@@ -105,7 +105,7 @@ export const drawCurve = (ref, xScale, tensions, onCurveChange) => {
                             .append("path")
                             .attr("class", "curve") 
                             .classed("active", 
-                                d => d.key === "color")
+                                d => d.key === active)
                             .attr("fill", (d) => color(d.key))
                             .attr("stroke", (d) => color(d.key))
                             .on("click", activate)

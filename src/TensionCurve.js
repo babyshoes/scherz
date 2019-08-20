@@ -1,17 +1,24 @@
-import React, { useLayoutEffect, useRef } from 'react';
-import { drawCurve } from './viz/curve'
-import './App.css';
+// import React, { useState, useLayoutEffect, useRef } from 'react';
+// import { drawCurve } from './viz/curve'
+// obsolete. see Left
 
-// no global for now
-export default function Tension ({numTimesteps, tensions}) {
-    const ref = useRef(null)
+// import './App.css';
 
-    useLayoutEffect(() => {
-        drawCurve(ref, numTimesteps, tensions)
-    })
+// // no global for now
+// export default function Tension ({numTimesteps, tensions}) {
+//     const [active, setActive] = useState("color")
+//     const ref = useRef(null)
 
-    return (
-        <div ref={ref} id="curve-viz"/>
-    )
+//     useLayoutEffect(() => {
+//         drawCurve(ref, numTimesteps, tensions)
+//     })
 
-} 
+//     const onActiveChange = (dim) => {
+//         setActive(dim)
+//     }
+
+//     return (
+//         <div ref={ref} id="curve-viz"/>
+//     )
+
+// } 

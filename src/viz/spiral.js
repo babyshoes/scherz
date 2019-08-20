@@ -94,7 +94,6 @@ const textLabel = function(ref) {
     const textDiv = document.createElement('div')
     textDiv.className = "note-label"
     textDiv.style.position = "absolute"
-    // textDiv.style.fontSize = "0.75em"
 
     return {
         element: textDiv,
@@ -107,18 +106,23 @@ const textLabel = function(ref) {
             if (this.parent) {
                 this.position.copy(this.parent.position)
             }
-            var coords2d = this.get2DCoords(this.position, camera);
+            const coords2d = this.get2DCoords(this.position, camera);
             this.element.style.left = coords2d.x + 'px'
             this.element.style.top = coords2d.y + 'px'
             
         },
         get2DCoords: function(position, camera) {
-            var width = this.ref.current.offsetWidth
-            var height = this.ref.current.offsetHeight
-            var vector = position.project(camera)
+            const width = this.ref.current.offsetWidth
+            const height = this.ref.current.offsetHeight
+            const vector = position.project(camera)
    
+            const otherDivsWidth = Array.from(document.getElementsByClassName("panel"))
+                .filter(el => !el.className.includes("right"))
+                .reduce((acc, el) => Number(el.clientWidth) + acc, 0)
+            // debugger
+
             // since it's an absolute position, gotta account for flexbox width of left side
-            vector.x = (vector.x + 1)/2 * width + (width*2)
+            vector.x = (vector.x + 1)/2 * width + otherDivsWidth
             vector.y = -(vector.y - 1)/2 * height
 
             return vector;

@@ -37,9 +37,9 @@ export const drawStaff = (ref, timestep, xScale, chords) => {
                         }, {})
 
     const translate = (note, pitch) => {
-        const octave = Math.floor((note - 60)/12) * 8
+        const octave = Math.floor((note - 60)/12) * 7
         const base = stringOrder[pitch[0].toLowerCase()]
-        return base + octave
+        return base + octave 
     }
 
     const countAccidental = (str, pattern) => {
@@ -53,12 +53,18 @@ export const drawStaff = (ref, timestep, xScale, chords) => {
         return sharpCt - flatCt
     }
 
-    let data = chords.map( chord => 
-        chord.notes.map( (note, i) => {
-            let pitch = chord.pitches[i]
-            return { note: translate(note, pitch), accidental: countAllAccidentals(pitch) }
-        }        
-    ))
+    let data = chords.map( chord => {
+        if (chord.notes.length === chord.pitches.length) {
+            return chord.notes.map( (note, i) => {
+                let pitch = chord.pitches[i]
+                return { note: translate(note, pitch), accidental: countAllAccidentals(pitch) }
+            })    
+        } else {
+            console.log("notes and pitches unequal length")
+        }
+    })
+
+    debugger
               
     const getOffset = (note, {note: prevNote, offset: prevOffset}) => {
         const diff = note - prevNote

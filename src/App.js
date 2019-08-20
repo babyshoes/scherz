@@ -46,7 +46,7 @@ const App = () => {
     // setChords(chords)
   }
 
-  const onStatusChange = () => {
+  const onPlayStatusChange = () => {
     setPlay(!play)
     console.log(play)
   }
@@ -55,7 +55,7 @@ const App = () => {
   return (
     <div className="App">
       <div className="header panel">
-        <Header status={play} onStatusChange={onStatusChange}/>
+        <Header play={play} onPlayStatusChange={onPlayStatusChange}/>
       </div>
       <div className="left panel">
         <Left 

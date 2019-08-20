@@ -43,7 +43,7 @@ export const drawCurve = (ref, xScale, tensions, onCurveChange) => {
         .attr("class", "pt")
         .append("text")
         .text(d => "\uf067")
-        .attr("x", 30)
+        .attr("x", 10)
         .attr("y", yScale(0))
         .attr("font-size", 15)
         .attr("font-family", "FontAwesome")

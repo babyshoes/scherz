@@ -94,7 +94,7 @@ const textLabel = function(ref) {
     const textDiv = document.createElement('div')
     textDiv.className = "note-label"
     textDiv.style.position = "absolute"
-    textDiv.style.fontSize = "0.75em"
+    // textDiv.style.fontSize = "0.75em"
 
     return {
         element: textDiv,

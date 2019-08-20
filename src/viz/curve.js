@@ -29,9 +29,9 @@ export const drawCurve = (ref, xScale, tensions, onCurveChange) => {
 
     const legend = svg.append("text")
         .attr("x", 30)
-        .attr("y", 30)
+        .attr("y", 75)
         .attr("font-family", "sans-serif")
-        .attr("font-size", "15px")
+        .attr("font-size", "20px")
 
     const addPoint = () => {
         data = [...data, {color:0, dissonance:0, gravity:0}]

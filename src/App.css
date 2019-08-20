@@ -42,8 +42,12 @@
   flex: 0.3;
   display: flex;
   flex-direction: row;
-  font-size: 5vw;
+  font-size: 4.5vw;
   padding-left: 10px;
+}
+
+.note-label {
+  font-size: 1vw;
 }
 
 @keyframes App-logo-spin {

@@ -4,6 +4,7 @@ import Left from './Left.js'
 import Options from './Options.js'
 import Spiral from './Spiral.js'
 import './App.css';
+import Tone from 'tone';
 
 const App = () => {
   const jsonData = "{\"chords\":[{\"notes\":[60,64,67,72],\"pitches\":[\"C\",\"E\",\"G\",\"C\"],\"type\":\"CM\"},{\"notes\":[64,69,69,72],\"pitches\":[\"E\",\"A\",\"A\",\"C\"],\"type\":\"Am\"},{\"notes\":[64,66,69,71],\"pitches\":[\"E\",\"F#\",\"A\",\"B\"],\"type\":\"B7sus4\"},{\"notes\":[62,66,68,71],\"pitches\":[\"D\",\"F#\",\"G#\",\"B\"],\"type\":\"G#m7-5\"},{\"notes\":[61,66,66,69],\"pitches\":[\"C#\",\"F#\",\"F#\",\"A\"],\"type\":\"F#m\"}],\"tensions\":[{\"color\":0,\"dissonance\":0,\"gravity\":0},{\"color\":0.4,\"dissonance\":0.5,\"gravity\":0},{\"color\":0,\"dissonance\":0.8,\"gravity\":0},{\"color\":0,\"dissonance\":0,\"gravity\":0}]}"
@@ -16,6 +17,12 @@ const App = () => {
   const [tonic, setTonic] = useState("c#")
   const [play, setPlay] = useState(false)
 
+  const synth = new Tone.PolySynth(4, Tone.Synth).toMaster()
+
+  const playChord = (synth, chord) => {
+    // get pitch in correct format
+    synth.triggerAttackRelease(["C4", "E4", "G4", "B4"], "4n");
+  } 
 
   const onCurveChange = (t) => {
     setTensions(t)
@@ -48,7 +55,9 @@ const App = () => {
 
   const onPlayStatusChange = () => {
     setPlay(!play)
-    console.log(play)
+    if(play===true) {
+      playChord(synth, chords[timestep])
+    }
   }
 
 

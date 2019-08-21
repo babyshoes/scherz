@@ -10,7 +10,8 @@
     "react-dom": "^16.8.6",
     "react-scripts": "3.0.1",
     "three": "^0.106.2",
-    "three-orbitcontrols": "^2.102.2"
+    "three-orbitcontrols": "^2.102.2",
+    "tone": "^13.4.9"
   },
   "scripts": {
     "start": "react-scripts start",

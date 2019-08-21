@@ -23,11 +23,15 @@ export const drawCurve = (ref, xScale, tensions, onCurveChange, active, onActive
         
     const color = d3.scaleOrdinal()
         .domain(groups)
-        .range(['#e41a1c','#377eb8','#4daf4a','#984ea3','#ff7f00','#ffff33','#a65628','#f781bf'])
+        // .range(['black', 'black', 'black'])
+        // .range(['#41b3a3', '#c38d9e', '#e8a87c', '#85dcb', '#e27d60'])
+        .range(['#3da4ab', '#f6cd61', '#fe8a71'])
+        // .range(['#e41a1c','#377eb8','#4daf4a','#984ea3','#ff7f00','#ffff33','#a65628','#f781bf'])
 
     const svg = makeSVG(ref, layout)
 
     const legend = svg.append("text")
+        .attr("class", "annotate")
         .attr("x", 30)
         .attr("y", 75)
         .attr("font-family", "sans-serif")
@@ -40,12 +44,12 @@ export const drawCurve = (ref, xScale, tensions, onCurveChange, active, onActive
     }
 
     svg.append("g")
-        .attr("class", "pt")
+        .attr("class", "annotate")
         .append("text")
         .text(d => "\uf067")
         .attr("x", 10)
         .attr("y", yScale(0))
-        .attr("font-size", 15)
+        .attr("font-size", 30)
         .attr("font-family", "FontAwesome")
         .on("click", addPoint)  
     // draw axis
@@ -68,8 +72,10 @@ export const drawCurve = (ref, xScale, tensions, onCurveChange, active, onActive
         legend.selectAll("tspan").remove()
         let string = `${d.key}`
         legend.append("tspan")
+            .attr("class", "label")
             .text(string) 
-            .attr("font-weight", "bold")
+            // .attr("font-size", "15px")
+            // .attr("font-weight", "bold")
 
         const dimension = stacked.find(l => l.key === d.key)
         const event = d3.event
@@ -89,6 +95,7 @@ export const drawCurve = (ref, xScale, tensions, onCurveChange, active, onActive
         const description = node !== null ? `: ${node.data[d.key].toFixed(1)}` : ""
 
         legend.append("tspan")
+            .attr("class", "label")
             .text(description)
     } 
 

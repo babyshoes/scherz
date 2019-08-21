@@ -132,7 +132,6 @@ export const drawCurve = (ref, xScale, tensions, onCurveChange, active, onActive
 
     const dragStart = (d) =>{
         d3.select(this).classed('active', true);
-        // d3.select(this).raise().classed('active', true);
         displayDimensionInfo(d)
     }
 
@@ -146,23 +145,26 @@ export const drawCurve = (ref, xScale, tensions, onCurveChange, active, onActive
         return diffsPossible.map(diff => diff + currentHeight)
     }
     
-    const dragging = (d) => {
-        const point = getPointFrom(stacked, d.key, d.xPos)
-        const [dimensionMax, dimensionMin] = getDimensionBounds(point, d.key, d.yPos)
+    const dragging = (d, i) => {
+        // don't allow first node to be dragged
+        if (i !== 0) {
+            const point = getPointFrom(stacked, d.key, d.xPos)
+            const [dimensionMax, dimensionMin] = getDimensionBounds(point, d.key, d.yPos)
+            
+            const newY = yScale.invert(d3.event.y)
+            if (newY <= dimensionMax && newY >= dimensionMin) {
+                d.yPos = newY
+                d3.select(this).attr("transform", d => 
+                    `translate(${xScale(d.xPos)}, ${yScale(d.yPos)})`
+                )
         
-        const newY = yScale.invert(d3.event.y)
-        if (newY <= dimensionMax && newY >= dimensionMin) {
-            d.yPos = newY
-            d3.select(this).attr("transform", d => 
-                `translate(${xScale(d.xPos)}, ${yScale(d.yPos)})`
-            )
-    
-            const diff = d.yPos - point[1]
-            data[d.xPos][d.key] += diff
-    
-            stacked = d3.stack().keys(groups)(data)
-            updateAreaPlot(stacked)
-            updatePointers(stacked)
+                const diff = d.yPos - point[1]
+                data[d.xPos][d.key] += diff
+        
+                stacked = d3.stack().keys(groups)(data)
+                updateAreaPlot(stacked)
+                updatePointers(stacked)
+            }
         }
         displayDimensionInfo(d)
     }
@@ -173,6 +175,16 @@ export const drawCurve = (ref, xScale, tensions, onCurveChange, active, onActive
         clearDimensionInfo()
     }
         
+    // const drag = (index) => {
+    //     debugger
+    //     if (index != 0) {
+    //         console.log('should be draggable!')
+    //         return d3.drag()
+    //         .on('start', dragStart)
+    //         .on('drag', dragging)
+    //         .on('end', dragEnd)
+    //     }  
+    // }
     const drag = d3.drag()
         .on('start', dragStart)
         .on('drag', dragging)
@@ -206,6 +218,7 @@ export const drawCurve = (ref, xScale, tensions, onCurveChange, active, onActive
                         `translate(${xScale(d.xPos)}, ${yScale(d.yPos)})`
                     )
                     .call(drag)
+                    // .call((d, i) => {debugger;drag(i)})
                     .append('circle')
                     .classed("active", true)
                     .style('fill', (d) => color(d.key) )

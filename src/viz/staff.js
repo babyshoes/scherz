@@ -63,7 +63,11 @@ export const drawStaff = (ref, timestep, xScale, chords) => {
         if (chord.notes.length === chord.pitches.length) {
             return chord.notes.map( (note, i) => {
                 let pitch = chord.pitches[i]
-                return { note: translate(note, pitch), accidental: countAllAccidentals(pitch) }
+                return { 
+                    note: translate(note, pitch), 
+                    accidental: countAllAccidentals(pitch),
+                    type: chord.type
+                }
             })    
         } else {
             console.log("notes and pitches unequal length")
@@ -75,12 +79,11 @@ export const drawStaff = (ref, timestep, xScale, chords) => {
         return (diff <= 1) ? !prevOffset : false
     }
 
-    // debugger
     data = _.flatMap(data, (notes, xPos) => 
         notes.reduce(
-            (acc, {note, accidental}) => {
+            (acc, {note, accidental, type}) => {
                 const offset = (_.isEmpty(acc)) ? false : getOffset(note, acc[acc.length - 1])
-                return [ ...acc, {note, accidental, offset, xPos} ]
+                return [ ...acc, {note, accidental, offset, xPos, type} ]
             },
             []
         )
@@ -106,6 +109,11 @@ export const drawStaff = (ref, timestep, xScale, chords) => {
     const extensionLine = y => {
         return (y % 2 === 0) & ((y > 10) | (y < 2)) ? 1 : 0
     }
+
+    const notesGroupedByChord = d3.nest()
+        .key(d => d.type)
+        .rollup(grp => grp[0].xPos)
+        .entries(data)
 
     // draw chords
     // https://stackoverflow.com/questions/20644415/d3-appending-text-to-a-svg-rectangle
@@ -138,5 +146,12 @@ export const drawStaff = (ref, timestep, xScale, chords) => {
         // .attr("x1", d => -12 + xScale((.1 * d.offset)))
         // .attr("x2", d => 12 + xScale((.1 * d.offset)))
         .attr("stroke-width", d => extensionLine(d.note))
+
+    svg.selectAll("g.note")
+        .data(notesGroupedByChord)
+        .enter().append("text")
+        .attr("class", "annotate")
+        .attr("transform", d => `translate(${xScale(d.value)}, ${yScale(-2.8)})`)
+        .text(d => d.key )
 
 }

@@ -37,8 +37,14 @@ export const drawStaff = (ref, timestep, xScale, chords) => {
                         }, {})
 
     const translate = (note, pitch) => {
-        const octave = Math.floor((note - 60)/12) * 7
         const base = stringOrder[pitch[0].toLowerCase()]
+        // const octave = Math.floor((note - 60)/12) * 7 * !onCusp
+        // const onCusp = note === 72 && pitch.includes("B")
+        const adjustedNote = pitch.toLowerCase() != "c" && note >= 72 ? note - (7 - base) : note
+        // console.log(onCusp)
+        const octave = Math.floor((adjustedNote - 60)/12) * 7
+        // console.log
+        
         return base + octave 
     }
 
@@ -69,6 +75,7 @@ export const drawStaff = (ref, timestep, xScale, chords) => {
         return (diff <= 1) ? !prevOffset : false
     }
 
+    // debugger
     data = _.flatMap(data, (notes, xPos) => 
         notes.reduce(
             (acc, {note, accidental}) => {

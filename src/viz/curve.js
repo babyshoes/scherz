@@ -40,6 +40,7 @@ export const drawCurve = (ref, xScale, tensions, onCurveChange, active, onActive
     const addPoint = () => {
         data = [...data, {color:0, dissonance:0, gravity:0}]
         stacked = d3.stack().keys(groups)(data)
+        // debugger
         onCurveChange(data)
     }
 

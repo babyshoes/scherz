@@ -83,8 +83,7 @@ export const drawStaff = (ref, timestep, xScale, chords) => {
        .attr("x1", 0)
        .attr("x2", layout.width)
        .attr("y1", d => yScale(d))
-       .attr("y2", d => yScale(d)) 
-       .attr("stroke", "black")  
+       .attr("y2", d => yScale(d))   
 
     const convertAccidental = numAcc => {
         const sharp = "♯"
@@ -109,12 +108,12 @@ export const drawStaff = (ref, timestep, xScale, chords) => {
     // draw notes
     notesAndAccidentals.append("circle")
         .attr("cx", d => d.offset * amtOffset )
-        .attr("r", 7)
-        .attr("stroke", "black")
+        .attr("r", 8)
         .attr("fill", "none")
     
     // draw accidentals
     notesAndAccidentals.append("text")
+        .attr("class", "annotate")
         .attr("x", d => d.offset ? amtOffset * -2 : amtOffset * -1.3)
         // .attr("x", d => d.offset ? xScale(-0.17) : xScale(-0.12))
         // .attr("x", d => xScale((-0.15 * d.offset) - 0.15))
@@ -127,7 +126,6 @@ export const drawStaff = (ref, timestep, xScale, chords) => {
         .attr("x2", d => amtOffset * 0.8)
         // .attr("x1", d => -12 + xScale((.1 * d.offset)))
         // .attr("x2", d => 12 + xScale((.1 * d.offset)))
-        .attr("stroke", "black")
         .attr("stroke-width", d => extensionLine(d.note))
 
 }

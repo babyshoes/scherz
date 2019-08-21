@@ -4,6 +4,7 @@
 
 import OrbitControls from 'three-orbitcontrols'
 import * as THREE from 'three'
+import _ from 'lodash'
 
 const circleOfFifths = ['C', 'G', 'D', 'A', 'E', 'B', 'Gb', 'Db', 'Ab', 'Eb', 'Bb', 'F']
 
@@ -11,7 +12,7 @@ const circleOfFifths = ['C', 'G', 'D', 'A', 'E', 'B', 'Gb', 'Db', 'Ab', 'Eb', 'B
 // - make line weight and label text size dynamic
 const buildScene = () => {
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color("white");
+    scene.background = new THREE.Color("#574e5c");
 
     return scene;
 }
@@ -29,7 +30,7 @@ const buildCamera = (width, height) => {
 }
 
 const buildRenderer = (ref, width, height) => {
-    const renderer = new THREE.WebGLRenderer();
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
     const DPR = (window.devicePixelRatio) ? window.devicePixelRatio : 1;
     renderer.setPixelRatio(DPR);
     renderer.setSize(width, height);
@@ -64,9 +65,18 @@ const calculateSpiralPoints = (topY, bottomY) => {
 }
 
 const drawMarker = (scene, x, y, z, pitch) => {
+    // var radius = 0.2,
+    // segments = 12,
+    // material = new THREE.LineBasicMaterial( { color: 'white' } ),
+    // geometry = new THREE.CircleGeometry( radius, segments );
+    // Remove center vertex
+    // geometry.vertices.shift();
+    // var mesh = new THREE.LineLoop( geometry, material )
+
     const geometry = new THREE.SphereGeometry(
-        0.1, 20, 20);
-    const material = new THREE.MeshBasicMaterial({ color: 0x377eb8 });
+        // 0.4, 20, 20);
+        0.3, 3, 2);
+    const material = new THREE.MeshBasicMaterial({ color: 'white', transparent: true, opacity: 0.5 });
     const mesh = new THREE.Mesh(geometry, material);
 
     mesh.name = pitch
@@ -100,7 +110,13 @@ const textLabel = function(ref) {
         parent: null,
         position: new THREE.Vector3(0,0,0),
         ref: ref,
-        setHTML: function (html) {this.element.innerHTML = html},
+        setHTML: function (note) {
+            // this.element.innerHTML = `<div>
+            //     <div class='marker'>°</div>
+            //     <div class='note'>${note}</div>
+            // </div>`
+            this.element.innerHTML = note
+        },
         setParent: function (mesh){this.parent = mesh},
         updatePosition: function (camera, ref) {
             if (this.parent) {
@@ -132,6 +148,10 @@ const textLabel = function(ref) {
 
 const createTextLabels = (ref, camera, markers) => {
     return markers.map(ptMesh => {
+        // const circle = textLabel(ref)
+        // circle.setHTML("°")
+        // circle.setParent(ptMesh)
+
         const label = textLabel(ref)
         label.setHTML(ptMesh.name)
         label.setParent(ptMesh) 
@@ -153,16 +173,21 @@ const getVector3s = (noteMarkers, chord) => {
 const drawChordPlane = (scene, noteMarkers, chord) => {
     // TO DO: remove doctoring 
     chord.pitches = ['C', 'G', 'E', 'B']
+
+    // const colorChoices = ['#e27d60', '#c38d9e', '#e8a87c', '#85dcb', '#41b3a3']
+    const colorChoices = ['#3da4ab', '#f6cd61', '#fe8a71']
     const chordVector3s = getVector3s(noteMarkers, chord)
 
     const geometry = new THREE.Geometry()
     geometry.vertices.push(...chordVector3s)
     geometry.faces.push(new THREE.Face3(2, 1, 0), new THREE.Face3(3, 2, 0))
     const material = new THREE.MeshBasicMaterial( {
-        color:0x00ff00, 
-        side:THREE.DoubleSide,
-        transparent: true,
-        opacity: 0.5 } 
+        // color:0x00ff00, 
+        // color: '#41b3a3',
+        color: _.sample(colorChoices),
+        side: THREE.DoubleSide,
+        // transparent: true,
+        opacity: 1.0 } 
     )
 
     const mesh = new THREE.Mesh(geometry, material)
@@ -189,7 +214,7 @@ const getCatmullPoints = () => {
 }
 const drawSpiralMesh = (scene, points) => {
     var geometry = new THREE.BufferGeometry().setFromPoints( points );
-    var material = new THREE.LineBasicMaterial( { color : 0xff0000 } );
+    var material = new THREE.LineBasicMaterial( { linewidth: 2.0, color : "white" } );
     var curveObject = new THREE.Line( geometry, material );
 
     scene.add(curveObject)

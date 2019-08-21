@@ -25,10 +25,8 @@ const App = () => {
 
   const playChord = (synth, chord) => {
     // get pitch in correct format
-    debugger
     const chordNotes = chord.pitches.map((note, i) => {
       const octave = Math.floor((chord.notes[i] - 60)/12.0) + 4
-      console.log(octave)
       return note + octave.toString()
     })
     synth.triggerAttackRelease(chordNotes, "4n");
@@ -70,7 +68,7 @@ const App = () => {
 
   const onPlayStatusChange = () => {
     setPlay(!play)
-    if(play===true) {
+    if(play===false) {
       playChord(synth, chords[timestep])
     }
   }

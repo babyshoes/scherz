@@ -1,21 +1,21 @@
 import React, { useLayoutEffect, useRef } from 'react';
-import { drawSpiral } from './viz/spiral'
-// import { spiral } from './viz/spiral'
+// import { drawSpiral } from './viz/spiral'
+import { makeSpiral } from './viz/spiral'
 import './App.css';
 
 export default function Spiral ({chord}) {
 
     const ref = useRef(null)
-    let spiral = null
+    const spiral = makeSpiral()
 
     useLayoutEffect(() => {
         // instead of componentDidMount/Update
-        if (ref.current.className === "first-load") {
-            spiral = drawSpiral(chord, ref)
+        if (ref.current.clientWidth > 0 && ref.current.className === "first-load") {
+            // debugger
+            spiral.build(ref)
+            spiral.updateChordPlane(chord)
             ref.current.className = ""
         } else {
-            console.log("hello")
-            debugger
             spiral.updateChordPlane(chord)
         }
     }, [chord])

@@ -40,7 +40,7 @@ const Options = ({selectedScales, tonic, onScaleSelect, onScaleRemove, onTonicCh
     return scaleOptions.map((scale, index) => {
       const checked = selectedScales.includes(scale)
       return <div key={index}>
-        <input class="checkbox" key={`scale-${index}`} id={scale} checked={checked} type="checkbox" onChange={validateScaleSelection}/> 
+        <input className="checkbox" key={`scale-${index}`} id={scale} checked={checked} type="checkbox" onChange={validateScaleSelection}/> 
         <label key={`scale-label-${index}`} htmlFor={scale}>{scale}</label>
       </div>
     })
@@ -54,7 +54,6 @@ const Options = ({selectedScales, tonic, onScaleSelect, onScaleRemove, onTonicCh
       <h2>Tonic</h2>
       <input className="options" type="text" name="tonic" onChange={validateTonicSelection} value={tonic}/>
       <br/>
-      {/* <input id="item1" type="checkbox" checked/> <label for="item1">major</label> */}
       {/* <div> */}
         {/* <span>{tonic}</span> */}
         {/* </div> */}

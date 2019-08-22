@@ -5,7 +5,7 @@ import { makeSVG, baseLayout } from './util'
 // TO DO:
 // - make accidentals placement more dynamic
 
-export const drawStaff = (ref, timestep, xScale, chords) => {
+export const drawStaff = (ref, xScale, chords) => {
     // lay down layout
     const layout = { 
         ...baseLayout,

@@ -2,7 +2,7 @@ import * as d3 from 'd3';
 import _ from 'lodash';
 import { baseLayout, makeSVG } from './util'
 
-export const drawCurve = (ref, xScale, tensions, onCurveChange, active, onActiveChange) => {
+export const drawCurve = (play, ref, xScale, tensions, onCurveChange, active, onActiveChange) => {
     let data = tensions
 
     const groups = ["color", "dissonance", "gravity"]
@@ -38,10 +38,11 @@ export const drawCurve = (ref, xScale, tensions, onCurveChange, active, onActive
         .attr("font-size", "20px")
 
     const addPoint = () => {
-        data = [...data, {color:0, dissonance:0, gravity:0}]
-        stacked = d3.stack().keys(groups)(data)
-        // debugger
-        onCurveChange(data)
+        if(!play) {
+            data = [...data, {color:0, dissonance:0, gravity:0}]
+            stacked = d3.stack().keys(groups)(data)
+            onCurveChange(data)
+        }      
     }
 
     svg.append("g")
@@ -60,13 +61,16 @@ export const drawCurve = (ref, xScale, tensions, onCurveChange, active, onActive
     // svg.append("g")
     //    .call(axis)   
 
-    function activate(d) {    
-        let current = d3.select(this).classed("active")
-        d3.selectAll("path.curve.active").classed("active", false)
-        d3.select(this).classed("active", !current)
-
-        onActiveChange(d.key)
-        updatePointers(stacked)
+    function activate(d) {
+        if(!play) {
+            let current = d3.select(this).classed("active")
+            d3.selectAll("path.curve.active").classed("active", false)
+            d3.select(this).classed("active", !current)
+    
+            onActiveChange(d.key)
+            updatePointers(stacked)
+        }    
+        
     }
 
     function displayDimensionInfo (d) {
@@ -113,8 +117,8 @@ export const drawCurve = (ref, xScale, tensions, onCurveChange, active, onActive
                             .append("path")
                             .attr("class", "curve") 
                             .classed("active", 
-                                d => d.key === active)
-                            .attr("fill", (d) => color(d.key))
+                                d => !play && d.key === active)
+                            .attr("fill", (d) => !play ? color(d.key) : 'black')
                             .attr("stroke", (d) => color(d.key))
                             .on("click", activate)
                 , update => update.transition()   
@@ -147,7 +151,7 @@ export const drawCurve = (ref, xScale, tensions, onCurveChange, active, onActive
     
     const dragging = (d, i) => {
         // don't allow first node to be dragged
-        if (i !== 0) {
+        if (!play && i !== 0) {
             const point = getPointFrom(stacked, d.key, d.xPos)
             const [dimensionMax, dimensionMin] = getDimensionBounds(point, d.key, d.yPos)
             
@@ -218,7 +222,6 @@ export const drawCurve = (ref, xScale, tensions, onCurveChange, active, onActive
                         `translate(${xScale(d.xPos)}, ${yScale(d.yPos)})`
                     )
                     .call(drag)
-                    // .call((d, i) => {debugger;drag(i)})
                     .append('circle')
                     .classed("active", true)
                     .style('fill', (d) => color(d.key) )

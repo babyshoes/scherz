@@ -13,6 +13,22 @@ export default function Header({play, onPlayStatusChange}) {
     const playVsPause = () => {
         return play === true ? "||" : ">"
     }
+
+    const playChange = (e) => {
+        e.target.classList.remove('rainbow-surf')
+        onPlayStatusChange()
+    }
+
+    const about = () => {
+        return (
+            <div flex={1} alignSelf="flex-end">
+                <p>👋 Welcome to scherz.</p>
+                <p>Click 👇 to see/hear your generated chords.</p>
+                <p>Pull the tension curves 👉 to get some new chords.</p>
+                <p>Play on. 🤘</p>
+            </div>
+        )
+    }
     
     return (
         <div >
@@ -21,8 +37,13 @@ export default function Header({play, onPlayStatusChange}) {
             <div>h</div>
             <div>e</div>
             <div>r</div>
-            <div ref={ref} className="" onMouseOver={makePlayable} onClick={onPlayStatusChange}>
-                { playVsPause() }
+            <div ref={ref} className="" onMouseOver={makePlayable} onClick={playChange}>
+                <div className="play hype rainbow-surf">
+                    { playVsPause() }
+                    <span className="tooltiptext" display="flex" flexDirection="row" alignItems="center">
+                        { about() }
+                    </span>
+                </div>
             </div>
         </div>
         

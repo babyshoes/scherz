@@ -6,8 +6,7 @@
   --main-color: #574e5c;
   --accent-color1: #3da4ab;
   --accent-color2: #f6cd61;
-  --accent-color3: #fe8a71;
-  
+  --accent-color3: #fe8a71; 
 }
 
 .App {
@@ -112,6 +111,67 @@ h2 {
   padding-left: 15px;
   padding-top: 20px;
   display: inline;
+}
+
+.play {
+  font-size: 6vw;
+  cursor: pointer;
+}
+
+.hype {
+  font-family: 'Bungee Shade';
+  text-shadow: 0 0 0;
+}
+
+.hype:hover {
+  font-family: 'Bungee Outline';
+  text-shadow: -2px 1px 3px #000;
+}
+
+.rainbow-surf {
+  background:linear-gradient(to right, var(--accent-color2), var(--accent-color1), var(--accent-color3));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: rainbow_animation 2s ease-in-out infinite;
+  background-size: 400% 100%;
+}
+
+.tooltiptext {
+  visibility: hidden;
+  position: absolute;
+  z-index: 1;
+  /* transition: all 1s ease-in-out; */
+  font-family: Sans-Serif;
+  font-weight: 100;
+  font-size: 1.7vw;
+  /* background-color: white; */
+  /* color:var(--main-color); */
+  background-color: var(--main-color);
+  color: white;
+  text-align: center;
+  text-shadow: 0 0 0;
+  
+  width: 11%;
+  height: 50%;
+  transform: translate(0%, -120%);
+  /* bottom: 100%;
+  left: 50%; */
+  /* border: black; */
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rainbow-surf:hover .tooltiptext {
+  visibility: visible;
+  
+}
+
+@keyframes rainbow_animation {
+  0%,100% {background-position: 0 0;}
+  50% {background-position: 100% 0;}
 }
 
 .label {

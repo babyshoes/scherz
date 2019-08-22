@@ -18,7 +18,7 @@ export default function Spiral ({chord}) {
             debugger
             spiral.updateChordPlane(chord)
         }
-    }, [])
+    }, [chord])
 
     // useLayoutEffect(() => {
     //     console.log("first draw")

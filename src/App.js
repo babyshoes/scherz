@@ -21,7 +21,6 @@ const App = () => {
   const [play, setPlay] = useState(false)
   const [chords, setChords] = useState(main(tensions.slice(1), scales.map(s=>keyword(s)), keyword(tonic)))
   const [numTimesteps, setNumTimesteps] = useState(chords.length)
-  console.log(chords)
 
   const synth = new Tone.PolySynth(4, Tone.Synth).toMaster()
 
@@ -40,20 +39,6 @@ const App = () => {
     }
   }, [play, timestep]) 
 
-  // const iterateTimestep = () => {
-  //   debugger
-  //   console.log(timeRef.current)
-
-  //   playChord(synth, chords[timestep])
-  //   if (timestep < numTimesteps-1) {
-  //     setTimestep(timestep+1)
-  //   } else {
-  //     setTimestep(0)
-  //   }
-  //   timeRef.current = timestep
-  // }
-  // const rhythm = () => setInterval(iterateTimestep, 1000)
-
   const playChord = (synth, chord) => {
     // synth.triggerRelease()
     // synth.releaseAll()
@@ -64,7 +49,6 @@ const App = () => {
     })
     synth.triggerAttackRelease(chordNotes, '8n')
     // synth.triggerAttack(chordNotes)
-
     // synth.releaseAll()
   } 
 
@@ -101,13 +85,6 @@ const App = () => {
   const onPlayStatusChange = () => {
     setPlay(!play)
     setTimestep(0)
-    // if(play===false) {
-    //   rhythm()
-    // } else {
-    //   debugger
-    //   console.log("stop!")
-    //   clearInterval(rhythm)
-    // }
   }
 
   return (

@@ -4,6 +4,9 @@
   /* --main-color: #737977; */
   /* --main-color: #525554; */
   --main-color: #574e5c;
+  --accent-color1: #3da4ab;
+  --accent-color2: #f6cd61;
+  --accent-color3: #fe8a71;
   
 }
 
@@ -13,6 +16,7 @@
   display: flex;
   background-color: var(--main-color);
   color: white;
+  height: 100%;
 }
 
 .App-logo {
@@ -52,6 +56,11 @@ circle {
   border: 5px;
 }
 
+h2 {
+  font-weight: 200;
+  margin-bottom: 0.3em;
+}
+
 .annotate {
   /* font-weight: 100; */
   fill: white;
@@ -65,13 +74,14 @@ circle {
 }
 
 .left {
-  flex: 4;
+  flex: 5;
+  padding-right: 10px;
 }
 
 .header {
   /* align-items: flex-start; */
   align-items: stretch;
-  flex: 0.3;
+  flex: 0.5;
   display: flex;
   flex-direction: row;
   font-family: 'Bungee Outline';
@@ -111,6 +121,88 @@ circle {
   z-index: 1;
   font-size: 1vw;
 }
+
+.optionsDiv {
+  height: 100%;
+  border-left: 0.5px groove white;
+  padding-top:20px;
+  padding-left: 5px;
+  /* padding-right: 15px; */
+  font-size: 1.5vw;
+  box-shadow: 2px 0.5px 2px 0px #000;
+}
+
+.options {
+  border-radius: 10px;
+  font-size: 1.5vw;
+  width: 30%;
+  text-align: center;
+  
+}
+
+input.checkbox {
+  display: block;
+  height: 53px;
+  margin: 0 0 -53px -9999px;
+  order: 4;
+  outline: none;
+  counter-increment: undone-items;
+}
+
+input:checked {
+  order: 2;
+  counter-increment: done-items;  
+}
+
+label {
+  display: block;
+  position: relative;
+  padding: 4px 0 0px 0px;
+  /* border-top: 1px dashed #fff; */
+  order: 4;
+  cursor: pointer;
+  animation: undone .5s;
+}
+
+label::before {
+  content: '\f10c'; /* circle outline */
+  display: block;
+  position: absolute;
+  top: 5px;
+  left: 25%;
+  font: 1em 'FontAwesome';
+}
+
+input:checked + label::before {
+  content: '\f058'; /* circle checkmark */
+  /* color: var(--accent-color3) */
+}
+
+
+/* input[type="checkbox"] {
+  transform: scale(0.8);
+} */
+input[type=text], textarea {
+  -webkit-transition: all 0.30s ease-in-out;
+  -moz-transition: all 0.30s ease-in-out;
+  -ms-transition: all 0.30s ease-in-out;
+  -o-transition: all 0.30s ease-in-out;
+  outline: none;
+  padding: 3px 0px 3px 3px;
+  margin: 5px 1px 3px 0px;
+  border: 1px solid #DDDDDD;
+}
+ 
+input[type=text]:focus, textarea:focus {
+  box-shadow: 0 0 2px var(--accent-color1);
+  padding: 3px 0px 3px 3px;
+  margin: 5px 1px 3px 0px;
+  border: 1px solid var(--accent-color1);
+} 
+
+/* /* input {
+  border-radius: 25px;
+} */
 
 @keyframes App-logo-spin {
   from {

@@ -64,6 +64,7 @@ const App = () => {
     if (!scales.includes(scale)) {
       setScales([...scales, scale])
     }
+
     const newChords = main(tensions.slice(1), scales.map(s=>keyword(s)), keyword(tonic))
     setChords(newChords)
   }
@@ -104,14 +105,14 @@ const App = () => {
       </div>
       <div className="right panel">
         
-        {/* <Options
+        <Options
           selectedScales={scales}
           tonic={tonic}
           onScaleSelect={onScaleSelect}
           onScaleRemove={onScaleRemove}
           onTonicChange={onTonicChange}
-        /> */}
-        <Spiral chord={chords[timestep]}/>
+        />
+        {/* <Spiral chord={chords[timestep]}/> */}
       </div>
     </div>
   );

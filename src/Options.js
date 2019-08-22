@@ -8,8 +8,16 @@ const scaleOptions = ['major', 'minor', 'lydian', 'dorian']
 const Options = ({selectedScales, tonic, onScaleSelect, onScaleRemove, onTonicChange})  => {
 
   const validateScaleSelection = (e) => {
-    const scale = e.target.value
-    onScaleSelect(scale)
+    const scale = e.target.id
+    if(e.target.checked) {
+      onScaleSelect(scale)
+    } else {
+      onScaleRemove(scale)
+    }
+    
+    // selectedScales = [...selectedScales, scale]
+    // debugger
+    // onScaleSelect(selectedScales)
   }
 
   const validateTonicSelection = (e) => {
@@ -23,18 +31,36 @@ const Options = ({selectedScales, tonic, onScaleSelect, onScaleRemove, onTonicCh
         && (accidentals.size === 0
           || (accidentals.size === 1 && (accidentals.has("b") || accidentals.has("#"))))
         ) {
-          onTonicChange(tonic)
+          onTonicChange(tonic.toUpperCase())
         }
     }
   }
 
+  const makeChecklist = () => {
+    return scaleOptions.map((scale, index) => {
+      const checked = selectedScales.includes(scale)
+      return <div key={index}>
+        <input class="checkbox" key={`scale-${index}`} id={scale} checked={checked} type="checkbox" onChange={validateScaleSelection}/> 
+        <label key={`scale-label-${index}`} htmlFor={scale}>{scale}</label>
+      </div>
+    })
+
+  }
+
+
+
   return (
-    <div>
-      <input type="text" name="tonic" onChange={validateTonicSelection}/>
-      <div>
-        <span>{tonic}</span>
-        </div>
-      <select onChange={validateScaleSelection} value="default">
+    <div className="optionsDiv" >
+      <h2>Tonic</h2>
+      <input className="options" type="text" name="tonic" onChange={validateTonicSelection} value={tonic}/>
+      <br/>
+      {/* <input id="item1" type="checkbox" checked/> <label for="item1">major</label> */}
+      {/* <div> */}
+        {/* <span>{tonic}</span> */}
+        {/* </div> */}
+      <h2>Scales</h2>
+      {makeChecklist()}
+      {/* <select className="options" onChange={validateScaleSelection} value="default">
         <option value="default" disabled>
           select a scale
         </option>
@@ -49,15 +75,15 @@ const Options = ({selectedScales, tonic, onScaleSelect, onScaleRemove, onTonicCh
             {scale} 
           </option>
         )}
-      </select>
-      <div>
+      </select> */}
+      {/* <div>
         { selectedScales.map( (scale, index) => 
           <div key={index}>
             <span onClick={() => onScaleRemove(scale)}>x</span>
             <span> {scale}</span>
           </div>
         )}
-      </div>  
+      </div>   */}
       <div>
         
       </div>

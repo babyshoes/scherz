@@ -171,9 +171,6 @@ const getVector3s = (noteMarkers, chord) => {
 }
 
 const drawChordPlane = (scene, noteMarkers, chord) => {
-    // TO DO: remove doctoring 
-    chord.pitches = ['C', 'G', 'E', 'B']
-
     // const colorChoices = ['#e27d60', '#c38d9e', '#e8a87c', '#85dcb', '#41b3a3']
     const colorChoices = ['#3da4ab', '#f6cd61', '#fe8a71']
     const chordVector3s = getVector3s(noteMarkers, chord)
@@ -267,6 +264,7 @@ export const drawSpiral = function (chord, ref) {
     animate()
 
     return {
+        // binds/animates
         updateChordPlane: function(chord) {
             removeLabels(ref)
             removeChordPlane(scene, chordPlane)
@@ -276,4 +274,5 @@ export const drawSpiral = function (chord, ref) {
     }
 }
 
-
+// const spiral = drawSpiral()
+// export default spiral

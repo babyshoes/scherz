@@ -30,6 +30,17 @@ export const drawStaff = (ref, timestep, xScale, chords) => {
 
     // format data                
     // [{"notes":[60,64,67,71],"pitches":["C#","Eb","G","B"]}]
+    const countAccidental = (str, pattern) => {
+        const re = new RegExp(pattern, 'g')
+        return ((str || '').match(re) || []).length
+      }
+
+    const countAllAccidentals = (pitch) => {
+        const sharpCt = countAccidental(pitch, "#")
+        const flatCt = countAccidental(pitch, "b")
+        return sharpCt - flatCt
+    }
+    
     const stringOrder = "cdefgab"
                         .split("")
                         .reduce((acc, char, i) => { 
@@ -40,23 +51,14 @@ export const drawStaff = (ref, timestep, xScale, chords) => {
         const base = stringOrder[pitch[0].toLowerCase()]
         // const octave = Math.floor((note - 60)/12) * 7 * !onCusp
         // const onCusp = note === 72 && pitch.includes("B")
-        const adjustedNote = pitch.toLowerCase() != "c" && note >= 72 ? note - (7 - base) : note
+        // const adjustedNote = pitch[0].toLowerCase() != "c" && note >= 72 ? note - (7 - base) : note
+        const numAccidentals = countAllAccidentals(pitch)
+        const adjustedNote = note - numAccidentals
         // console.log(onCusp)
         const octave = Math.floor((adjustedNote - 60)/12) * 7
         // console.log
         
         return base + octave 
-    }
-
-    const countAccidental = (str, pattern) => {
-        const re = new RegExp(pattern, 'g')
-        return ((str || '').match(re) || []).length
-      }
-
-    const countAllAccidentals = (pitch) => {
-        const sharpCt = countAccidental(pitch, "#")
-        const flatCt = countAccidental(pitch, "b")
-        return sharpCt - flatCt
     }
 
     let data = chords.map( chord => {

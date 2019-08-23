@@ -21,7 +21,7 @@ export default function Header({play, onPlayStatusChange}) {
 
     const about = () => {
         return (
-            <div flex={1} alignSelf="flex-end">
+            <div flex={1}>
                 <p>👋 Welcome to scherz.</p>
                 <p>Click 👇 to see/hear your generated chords.</p>
                 <p>Pull the tension curves 👉 to get some new chords.</p>
@@ -40,7 +40,7 @@ export default function Header({play, onPlayStatusChange}) {
             <div ref={ref} className="" onMouseOver={makePlayable} onClick={playChange}>
                 <div className="play hype rainbow-surf">
                     { playVsPause() }
-                    <span className="tooltiptext" display="flex" flexDirection="row" alignItems="center">
+                    <span className="tooltiptext" display="flex">
                         { about() }
                     </span>
                 </div>

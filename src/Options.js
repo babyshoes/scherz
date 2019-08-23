@@ -1,9 +1,12 @@
 import React from 'react';
 import './App.css';
+import { scales } from 'shadow-cljs/scherz.exports'
 
 // possible scales?
 const scaleOptions = ['major', 'minor', 'lydian', 'dorian']
 
+// const scaleOptions = scales
+// debugger
 
 const Options = ({selectedScales, tonic, onScaleSelect, onScaleRemove, onTonicChange})  => {
 

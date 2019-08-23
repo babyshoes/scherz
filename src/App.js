@@ -5,11 +5,15 @@ import Options from './Options.js'
 import Spiral from './Spiral.js'
 import './App.css';
 import Tone from 'tone';
-import { main } from 'shadow-cljs/scherz.generate'
-// import { generate } from 'shadow-cljs/scherz.exports'
+// import { main } from 'shadow-cljs/scherz.generate'
+import { generate } from 'shadow-cljs/scherz.exports'
 import { keyword } from 'shadow-cljs/cljs.core'
 
 const App = () => {
+  const generateChords = (tensions, scales, tonic) => {
+    return generate(tensions.slice(1), scales.map(s=>keyword(s)), keyword(tonic))
+  }
+
   const spiralRef = useRef(null)
   const optionsRef = useRef(null)
   const jsonData = "{\"chords\":[{\"notes\":[60,64,67,72],\"pitches\":[\"C\",\"E\",\"G\",\"C\"],\"type\":\"CM\"},{\"notes\":[64,69,69,72],\"pitches\":[\"E\",\"A\",\"A\",\"C\"],\"type\":\"Am\"},{\"notes\":[64,66,69,71],\"pitches\":[\"E\",\"F#\",\"A\",\"B\"],\"type\":\"B7sus4\"},{\"notes\":[62,66,68,71],\"pitches\":[\"D\",\"F#\",\"G#\",\"B\"],\"type\":\"G#m7-5\"},{\"notes\":[61,66,66,69],\"pitches\":[\"C#\",\"F#\",\"F#\",\"A\"],\"type\":\"F#m\"}],\"tensions\":[{\"color\":0,\"dissonance\":0,\"gravity\":0},{\"color\":0.4,\"dissonance\":0.5,\"gravity\":0},{\"color\":0,\"dissonance\":0.8,\"gravity\":0},{\"color\":0,\"dissonance\":0,\"gravity\":0}]}"
@@ -22,7 +26,10 @@ const App = () => {
   const [scales, setScales] = useState(['major'])
   const [tonic, setTonic] = useState("C")
   const [play, setPlay] = useState(false)
-  const [chords, setChords] = useState(main(tensions.slice(1), scales.map(s=>keyword(s)), keyword(tonic)))
+  // const [chords, setChords] = useState(generate(tensions.slice(1), scales.map(s=>keyword(s)), keyword(tonic)))
+  const generated = generateChords(tensions, scales, tonic)
+  const [chords, setChords] = useState(generated.progression)
+  const [spiralRange, setSpiralRange] = useState(generated.spiral)
   const [numTimesteps, setNumTimesteps] = useState(chords.length)
 
   const synth = new Tone.PolySynth(4, Tone.Synth).toMaster()
@@ -30,7 +37,8 @@ const App = () => {
   useEffect(() => {
     if (play === true) {
       // synth.releaseAll() 
-      playChord(synth, chords[timestep])
+      // playChord(synth, chords[timestep])
+      console.log(chords[timestep])
 
       setTimeout(() => {
         if (timestep < numTimesteps-1) {
@@ -59,9 +67,6 @@ const App = () => {
       swapActivePanel(spiralRef, optionsRef)
       
     }
-    // if (optionsRef.current && spiralRef.current) {
-    //   swapOptionsSpiral(optionsRef, spiralRef)
-    // }
   }, [play])
 
 
@@ -79,12 +84,20 @@ const App = () => {
     // synth.releaseAll()
   } 
 
+  const generateAndSet = (tensions, scales, tonic) => {
+    const generated = generateChords(tensions, scales, tonic)
+    setChords(generated.progression)
+    setSpiralRange(generated.spiral)
+  }
+
   const onCurveChange = (t) => {
     setTensions(t)
     setNumTimesteps(t.length)
 
-    const newChords = main(t.slice(1), scales.map(s=>keyword(s)), keyword(tonic))
-    setChords(newChords)
+    generateAndSet(t, scales, tonic)
+
+    // const newChords = generate(t.slice(1), scales.map(s=>keyword(s)), keyword(tonic))
+    // setChords(newChords)
   }
 
   const onScaleSelect = (scale) => {
@@ -92,38 +105,27 @@ const App = () => {
       setScales([...scales, scale])
     }
 
-    const newChords = main(tensions.slice(1), scales.map(s=>keyword(s)), keyword(tonic))
-    setChords(newChords)
+    generateAndSet(tensions, scales, tonic)
+    // const newChords = generate(tensions.slice(1), scales.map(s=>keyword(s)), keyword(tonic))
+    // setChords(newChords)
   }
 
   const onScaleRemove = (scale) => {
     if (scales.length > 1 && scales.includes(scale)) {
       setScales(scales.filter(s => s !== scale))
     }
-    const newChords = main(tensions.slice(1), scales.map(s=>keyword(s)), keyword(tonic))
-    setChords(newChords)
+
+    generateAndSet(tensions, scales, tonic)
   }
 
   const onTonicChange = (tonic) => { 
     setTonic(tonic)
-    const newChords = main(tensions.slice(1), scales.map(s=>keyword(s)), keyword(tonic))
-    setChords(newChords)
-  }
-
-  const swapOptionsSpiral = (ref) => {
-    debugger
-    const children = Array.from(ref.current.children)
-    const hidden = children.find(n=> n.classList.value.includes("hidden"))
-    const visible = children.find(n=> !n.classList.value.includes("hidden"))
-
-    hidden.classList.remove("hidden")
-    visible.classList.add("hidden")
+    generateAndSet(tensions, scales, tonic)
   }
  
   const onPlayStatusChange = () => {
     setPlay(!play)
     setTimestep(0)
-    // swapOptionsSpiral()
   }
 
   return (

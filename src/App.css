@@ -55,6 +55,9 @@ circle {
   border: 5px;
 }
 
+canvas {
+  transition: all 1s;
+}
 h2 {
   font-weight: 200;
   margin-bottom: 0.3em;
@@ -68,7 +71,7 @@ h2 {
 .panel {
   transition: all 1s;
   align-items: center;
-  flex: 2;
+  flex: 1.5;
   /* display: flex; */
   flex-direction: column;
 }
@@ -79,9 +82,24 @@ h2 {
 }
 
 .hidden {
-  /* display: none; */
+  
+  /* width: 0px; */
   flex: 0.0000000001;
-  transform: translate(105%);
+  /* display: none; */
+  /* transform: translate(120%); */
+}
+
+.hidden .optionsDiv {
+  width: 0;
+  height: 0;
+  /* position: absolute; 
+  left: -9999px; */
+  /* display: none; */
+  /* visibility: hidden; */
+}
+
+.hidden.right {
+  border-left: 0;
 }
 
 .right {
@@ -153,7 +171,7 @@ h2 {
   text-shadow: 0 0 0;
   
   width: 11%;
-  height: 50%;
+  height: 75%;
   transform: translate(0%, -120%);
   /* bottom: 100%;
   left: 50%; */
@@ -204,6 +222,7 @@ h2 {
   padding-left: 5px; */
   /* padding-right: 15px; */
   font-size: 1.5vw;
+  /* transition: 3s; */
   
   /* transition: all 1s; */
 }
@@ -211,7 +230,7 @@ h2 {
 .options {
   border-radius: 10px;
   font-size: 1.5vw;
-  width: 30%;
+  width: 40%;
   text-align: center;
   
 }
@@ -260,10 +279,10 @@ input:checked + label::before {
   transform: scale(0.8);
 } */
 input[type=text], textarea {
-  -webkit-transition: all 0.30s ease-in-out;
+  /* -webkit-transition: all 0.30s ease-in-out;
   -moz-transition: all 0.30s ease-in-out;
   -ms-transition: all 0.30s ease-in-out;
-  -o-transition: all 0.30s ease-in-out;
+  -o-transition: all 0.30s ease-in-out; */
   outline: none;
   padding: 3px 0px 3px 3px;
   margin: 5px 1px 3px 0px;

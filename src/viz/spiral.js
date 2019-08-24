@@ -37,6 +37,8 @@ const buildRenderer = (ref, width, height) => {
     renderer.setPixelRatio(DPR);
     renderer.setSize(width, height);
 
+    // hmmm not a gr8 place for this
+    renderer.domElement.classList.add("shift-off")
     ref.current.appendChild(renderer.domElement)
     renderer.domElement.style.width = '100%'
     renderer.domElement.style.height = '100%'

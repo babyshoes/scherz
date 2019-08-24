@@ -53,7 +53,7 @@ const Options = ({selectedScales, tonic, onScaleSelect, onScaleRemove, onTonicCh
 
 
   return (
-    <div className="optionsDiv" >
+    <div id="options-div" >
       <h2>Tonic</h2>
       <input className="options" type="text" name="tonic" onChange={validateTonicSelection} value={tonic}/>
       <br/>

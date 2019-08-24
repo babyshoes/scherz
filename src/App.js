@@ -7,11 +7,11 @@ import './App.css';
 import Tone from 'tone';
 // import { main } from 'shadow-cljs/scherz.generate'
 import { generate } from 'shadow-cljs/scherz.exports'
-import { keyword } from 'shadow-cljs/cljs.core'
+// import { keyword } from 'shadow-cljs/cljs.core'
 
 const App = () => {
   const generateChords = (tensions, scales, tonic) => {
-    return generate(tensions.slice(1), scales.map(s=>keyword(s)), keyword(tonic))
+    return generate(tensions.slice(1), scales.map(s=>s), tonic)
   }
 
   const spiralRef = useRef(null)
@@ -50,25 +50,38 @@ const App = () => {
     }
   }, [play, timestep]) 
 
-  const swapActivePanel= (visible, hidden) => {
-    visible.current.classList.add('hidden')
-    hidden.current.classList.remove('hidden')
+  const hideOptions = (outer, inner) => {
+    outer.classList.add("invisible")
+    inner.classList.add("shift-off")
+
   }
 
-  // const activateEditing = () => {
+  const showOptions = (outer, inner) => {
+    outer.classList.remove("invisible")
+    inner.classList.remove("shift-off")
+  }
 
-  // }
+  const showSpiral = (canvas) => {
+    canvas.classList.remove("shift-off")
+  }
+
+  const hideSpiral = (canvas) => {
+    canvas.classList.add("shift-off")
+  }
 
   useEffect(() => {
-    // debugger
+    const outer = optionsRef.current
+    const inner = Array.from(outer.children).find(n=> n.id === "options-div")
+    const spiralCanvas = Array.from(spiralRef.current.children).find(n=> n.id === "spiral-viz").children[0]
+
     if (play === true) {
-      swapActivePanel(optionsRef, spiralRef)
+      hideOptions(outer, inner)
+      showSpiral(spiralCanvas)
     } else {
-      swapActivePanel(spiralRef, optionsRef)
-      
+      showOptions(outer, inner)
+      hideSpiral(spiralCanvas)
     }
   }, [play])
-
 
 
   const playChord = (synth, chord) => {
@@ -130,12 +143,14 @@ const App = () => {
 
   return (
     <div className="App">
+      
       <div className="header panel">
+        
         <Header play={play} onPlayStatusChange={onPlayStatusChange}/>
       </div>
       <div className="left panel">
         <Left 
-          className="panel"
+          // className="panel"
           play={play}
           numTimesteps={numTimesteps}
           chords={chords}
@@ -143,10 +158,10 @@ const App = () => {
           onCurveChange={onCurveChange}
         />
       </div>
-      <div ref={spiralRef} className="panel hidden">
+      <div ref={spiralRef} className="right panel">
         <Spiral chord={chords[timestep]}/>
       </div>
-      <div ref={optionsRef} className="right panel">
+      <div ref={optionsRef} className="right options-right panel">
         <Options
             selectedScales={scales}
             tonic={tonic}

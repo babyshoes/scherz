@@ -37,7 +37,7 @@ const App = () => {
   useEffect(() => {
     if (play === true) {
       // synth.releaseAll() 
-      // playChord(synth, chords[timestep])
+      playChord(synth, chords[timestep])
       console.log(chords[timestep])
 
       setTimeout(() => {

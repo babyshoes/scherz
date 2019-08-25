@@ -38,7 +38,7 @@ const buildRenderer = (ref, width, height) => {
     renderer.setSize(width, height);
 
     // hmmm not a gr8 place for this
-    renderer.domElement.classList.add("shift-off")
+    // renderer.domElement.classList.add("shift-off")
     ref.current.appendChild(renderer.domElement)
     renderer.domElement.style.width = '100%'
     renderer.domElement.style.height = '100%'
@@ -283,14 +283,16 @@ export const makeSpiral = function (chord, ref) {
 
             this.spiralMesh = drawSpiralMesh(this.scene, points)
             this.markers = drawNoteMarkers(this.scene, points)
-            // this.labels = createTextLabels(this.ref, this.camera, this.markers)
+            this.labels = createTextLabels(this.ref, this.camera, this.markers)
             
+            this.renderer.domElement.classList.add("shift-off", "invisible")
+            this.labels.forEach(l => l.element.classList.add("shift-off", "invisible"))
             window.addEventListener('resize', handleWindowResize(this.ref, this.camera, this.renderer))
             
             const _this = this
             function animate() {
                 requestAnimationFrame( animate )
-                // if (_this.labels) {_this.labels.forEach(l => l.updatePosition(_this.ref, _this.camera))}
+                if (_this.labels) {_this.labels.forEach(l => l.updatePosition(_this.ref, _this.camera))}
                 _this.renderer.render( _this.scene, _this.camera )
             }
 

@@ -3,7 +3,7 @@ import React, { useLayoutEffect, useRef } from 'react';
 import { makeSpiral } from './viz/spiral'
 import './App.css';
 
-export default function Spiral ({chord}) {
+export default function Spiral ({chord, spiralRange}) {
 
     const ref = useRef(null)
     const spiral = makeSpiral()

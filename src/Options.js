@@ -3,9 +3,10 @@ import './App.css';
 import { scales } from 'shadow-cljs/scherz.exports'
 
 // possible scales?
-const scaleOptions = ['major', 'minor', 'lydian', 'dorian']
+// const scaleOptions = ['major', 'minor', 'lydian', 'dorian']
 
-// const scaleOptions = scales
+const scaleOptions = scales//.slice(0, 10)
+const restOfScaleOptions = scales.slice(10)
 // debugger
 
 const Options = ({selectedScales, tonic, onScaleSelect, onScaleRemove, onTonicChange})  => {
@@ -41,9 +42,9 @@ const Options = ({selectedScales, tonic, onScaleSelect, onScaleRemove, onTonicCh
 
   const makeChecklist = () => {
     return scaleOptions.map((scale, index) => {
-      const checked = selectedScales.includes(scale)
-      return <div key={index}>
-        <input className="checkbox" key={`scale-${index}`} id={scale} checked={checked} type="checkbox" onChange={validateScaleSelection}/> 
+      // const checked = selectedScales.includes(scale)
+      return <div key={index} class="hidden">
+        <input className="checkbox" key={`scale-${index}`} id={scale} type="checkbox" onChange={validateScaleSelection}/> 
         <label key={`scale-label-${index}`} htmlFor={scale}>{scale}</label>
       </div>
     })
@@ -55,13 +56,21 @@ const Options = ({selectedScales, tonic, onScaleSelect, onScaleRemove, onTonicCh
   return (
     <div id="options-div" >
       <h2>Tonic</h2>
-      <input className="options" type="text" name="tonic" onChange={validateTonicSelection} value={tonic}/>
+      <div>
+        <input className="options" type="text" name="tonic" onChange={validateTonicSelection} value={tonic}/>
+      </div>
       <br/>
       {/* <div> */}
         {/* <span>{tonic}</span> */}
         {/* </div> */}
       <h2>Scales</h2>
+      
+      <div className="scale-list">
       {makeChecklist()}
+      </div>
+      {/* <h2>Test</h2> */}
+      
+      {/* <p onClick={showRest}>See more</p> */}
       {/* <select className="options" onChange={validateScaleSelection} value="default">
         <option value="default" disabled>
           select a scale

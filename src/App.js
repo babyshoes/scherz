@@ -61,22 +61,27 @@ const App = () => {
     inner.classList.remove("shift-off")
   }
 
-  const showSpiral = (canvas) => {
-    canvas.classList.remove("shift-off")
+  const showSpiral = (allEls) => {
+    // debugger
+    Array.from(allEls.children).forEach(el => el.classList.remove("shift-off", "invisible"))
+    // canvas.classList.remove("shift-off")
   }
 
-  const hideSpiral = (canvas) => {
-    canvas.classList.add("shift-off")
+  const hideSpiral = (allEls) => {
+    Array.from(allEls.children).forEach(el => el.classList.add("shift-off", "invisible"))
+    // canvas.classList.add("shift-off")
   }
 
   useEffect(() => {
     const outer = optionsRef.current
     const inner = Array.from(outer.children).find(n=> n.id === "options-div")
-    const spiralCanvas = Array.from(spiralRef.current.children).find(n=> n.id === "spiral-viz").children[0]
+    const spiralCanvas = Array.from(spiralRef.current.children).find(n=> n.id === "spiral-viz")
+    // const spiralCanvas = Array.from(spiralRef.current.children)//.find(n=> n.id === "spiral-viz").children[0]
 
     if (play === true) {
       hideOptions(outer, inner)
       showSpiral(spiralCanvas)
+      
     } else {
       showOptions(outer, inner)
       hideSpiral(spiralCanvas)
@@ -159,7 +164,7 @@ const App = () => {
         />
       </div>
       <div ref={spiralRef} className="right panel">
-        <Spiral chord={chords[timestep]}/>
+        <Spiral chord={chords[timestep]} spiralRange={spiralRange}/>
       </div>
       <div ref={optionsRef} className="right options-right panel">
         <Options

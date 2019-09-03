@@ -1,12 +1,12 @@
 import React from 'react';
 import './App.css';
-import { scales } from 'shadow-cljs/scherz.exports'
+import { util } from 'scherz'
 
 // possible scales?
 // const scaleOptions = ['major', 'minor', 'lydian', 'dorian']
 
-const scaleOptions = scales//.slice(0, 10)
-const restOfScaleOptions = scales.slice(10)
+const scaleOptions = util.scales//.slice(0, 10)
+// const restOfScaleOptions = scales.slice(10)
 // debugger
 
 const Options = ({selectedScales, tonic, onScaleSelect, onScaleRemove, onTonicChange})  => {
@@ -43,7 +43,7 @@ const Options = ({selectedScales, tonic, onScaleSelect, onScaleRemove, onTonicCh
   const makeChecklist = () => {
     return scaleOptions.map((scale, index) => {
       // const checked = selectedScales.includes(scale)
-      return <div key={index} class="hidden">
+      return <div key={index}>
         <input className="checkbox" key={`scale-${index}`} id={scale} type="checkbox" onChange={validateScaleSelection}/> 
         <label key={`scale-label-${index}`} htmlFor={scale}>{scale}</label>
       </div>

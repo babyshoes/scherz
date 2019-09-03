@@ -41,7 +41,9 @@ export const drawCurve = (play, ref, xScale, tensions, onCurveChange, active, on
         if(!play) {
             data = [...data, {color:0, dissonance:0, gravity:0}]
             stacked = d3.stack().keys(groups)(data)
-            onCurveChange(data)
+
+            const timestep = data.length - 1
+            onCurveChange(data[timestep], timestep)
         }      
     }
 
@@ -104,9 +106,7 @@ export const drawCurve = (play, ref, xScale, tensions, onCurveChange, active, on
             .text(description)
     } 
 
-    const clearDimensionInfo = (d) => {
-        legend.selectAll("tspan").remove()
-    }
+    const clearDimensionInfo = d => legend.selectAll("tspan").remove()
 
     const updateAreaPlot = (stacked) =>
         svg
@@ -175,8 +175,10 @@ export const drawCurve = (play, ref, xScale, tensions, onCurveChange, active, on
     
     const dragEnd = (d) => {
         d3.select(this).classed('active', false);
-        onCurveChange(data)
         clearDimensionInfo()
+
+        const timestep = d.xPos
+        onCurveChange(data[timestep], timestep)
     }
         
     // const drag = (index) => {

@@ -68,7 +68,7 @@ export const drawStaff = (ref, xScale, chords) => {
                 return { 
                     note: translate(note, pitch), 
                     accidental: countAllAccidentals(pitch),
-                    type: chord.type
+                    type: chord.name
                 }
             })    
         } else {

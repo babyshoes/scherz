@@ -9,7 +9,7 @@ export const drawStaff = (ref, xScale, chords) => {
     // lay down layout
     const layout = { 
         ...baseLayout,
-        marginTop: -10,
+        marginTop: 0,
         marginBottom: 50,
         maxH: 300
     }

@@ -49,6 +49,15 @@ class App extends Component {
   componentDidMount(){
     // this.chordWorker = new WebWorker(worker)
     this.chordWorker = new chordWorker()
+    this.chordWorker.onmessage = (evt) => {
+      const [newChord, timestep] = evt.data
+      this.setNewChord(newChord, timestep)
+      if (timestep < this.state.tensions.length - 1) { 
+        const {tensions, chords, scales, tonic} = this.state
+        this.generateAndSet(timestep+1)
+        // this.generateAndSet(newChord, this.state.tensions[timestep+1], this.state.scales, timestep + 1)
+      }
+  }  
     this.progressionW = new progressionWorker()
     this.progressionW.onmessage = (evt) => {
       console.log(evt.data)
@@ -57,19 +66,25 @@ class App extends Component {
   }
 
 
-  componentDidUpdate(prevProps, prevState, snapshot) {
-    if (this.state.play) {
-        const {chords, timestep} = this.state
-        this.playChord(chords[timestep])
-
-        setTimeout(() => {
-            if (timestep < this.state.tensions.length-1) {
-              this.setState({timestep: timestep+1})
-            } else {
-              this.setState({timestep: 0})
-            }
-          }, 1000)
+  componentDidUpdate(prevProps, prevState) {
+    if (prevState.tonic !== this.state.tonic || prevState.scales.length !== this.state.scales.length) {
+      console.log(this.state.scales)
+      this.generateAndSet(0)
     }
+    // if (this.state.play) {
+    //     const {chords, timestep} = this.state
+    //     this.playChord(chords[timestep])
+
+    //     setTimeout(() => {
+    //         if (timestep < this.state.tensions.length-1) {
+    //           this.setState(() => ({timestep: timestep+1}))
+    //         } else {
+    //           this.setState(() => ({timestep: 0}))
+    //         }
+    //       }, 1000)
+    // }
+    
+    
   }
 
   playChord = (chord) => {
@@ -88,21 +103,18 @@ class App extends Component {
     // console.log(`new chord in app: ${newChord.tonic + newChord.type} @ timestep${timestep}`)
     const prevChords = this.state.chords
     const newChords = this.changeElementAtIndex(prevChords, newChord, timestep)
-    this.setState((prevChords) => {
-      return {chords: newChords}
-    })  
+    this.setState(() => ({chords: newChords}))  
     // console.log(this.state.chords)
   }
   
-  generateAndSet = (prevChord, tension, scales, timestepIndex) => {
-    this.chordWorker.onmessage = (evt) => {
-      const [newChord, timestep] = evt.data
-      this.setNewChord(newChord, timestep)
-      if (timestep < this.state.tensions.length - 1) { 
-        this.generateAndSet(newChord, this.state.tensions[timestep+1], this.state.scales, timestep + 1)
-      }
-  }  
-    this.chordWorker.postMessage({prevChord, tension, scales, timestepIndex})
+  generateAndSet = (timestepIndex) => {
+    
+    const {chords, tensions, scales, tonic} = this.state
+
+    const prevChord = chords[timestepIndex - 1],
+          tension = tensions[timestepIndex]
+
+    this.chordWorker.postMessage({prevChord, tension, scales, timestepIndex, tonic})
   }
 
   // generateAndSet = (prevChord, tension, scales, timestepIndex) => {
@@ -136,17 +148,20 @@ class App extends Component {
   onCurveChange = (newTension, timestep) => {
       const {tensions, chords, scales, tonic} = this.state
       const newTensions = this.changeElementAtIndex(tensions, newTension, timestep)
-      this.setState({tensions: newTensions})
+      this.setState(() => ({tensions: newTensions}))  
   
     // how to get and terminate prev worker?
-      this.generateAndSet(chords[timestep - 1], newTension, scales, timestep)
+      this.generateAndSet(timestep)
+      // this.generateAndSet(chords[timestep - 1], newTension, scales, timestep)
       this.progressionW.postMessage({tensions, scales, tonic})
   }
   
 
   onScaleSelect = (scale) => {
     if (!this.state.scales.includes(scale)) {
-        this.setState({scales: [...this.state.scales, scale]})
+        this.setState(({scales: prevScales}) => {
+          return {scales: [...prevScales, scale]}
+        })  
     }
 
     // this.generateAndSet(this.tensions, this.scales, this.tonic)
@@ -154,24 +169,36 @@ class App extends Component {
 
   onScaleRemove = (scale) => {
     if (this.state.scales.length > 1 && this.state.scales.includes(scale)) {
-        this.setState({scales: this.state.scales.filter(s => s !== scale)})
+        this.setState(({scales: prevScales}) => {
+          return {scales: prevScales.filter(s => s !== scale)}
+        })
     }
 
     // this.generateAndSet(this.tensions, this.scales, this.tonic)
   }
 
-  onTonicChange = (tonic) => { 
-      this.setState({tonic})
-      this.restartWorker()
-      this.getInitialChord()
-      this.generateProgressionFrom(1)
+  onTonicChange = (newTonic) => { 
+      // const changeTonic = (newTonic) => { this.setState((prevState) => {return {tonic: newTonic}}) }
+      // changeTonic(newTonic)
+
+      this.setState(function() {
+        return {
+          tonic: newTonic
+        }
+      })
+      // this.restartWorker()
+      
+      
   }
  
   onPlayStatusChange = () => {
-      this.setState({
-          play: !this.state.play, 
-          timestep: 0
-        })
+      this.setState( ({play: prevPlay}) => {
+        return {
+            // play: !this.state.play, 
+            play: !prevPlay,
+            timestep: 0
+        }
+      })
   }
 
   render() {

@@ -5,10 +5,10 @@ import Options from './Options.js'
 import Spiral from './Spiral.js'
 import './App.css';
 import Tone from 'tone';
-import { generate } from 'scherz'
+import { generate, brightness } from 'scherz'
 import chordWorker from "./chord.worker.js"
 import progressionWorker from "./progression.worker.js"
-
+import _ from 'lodash'
 
 const jsonData = "{\"chords\":[{\"notes\":[60,64,67,72],\"pitches\":[\"C\",\"E\",\"G\",\"C\"],\"type\":\"CM\"},{\"notes\":[64,69,69,72],\"pitches\":[\"E\",\"A\",\"A\",\"C\"],\"type\":\"Am\"},{\"notes\":[64,66,69,71],\"pitches\":[\"E\",\"F#\",\"A\",\"B\"],\"type\":\"B7sus4\"},{\"notes\":[62,66,68,71],\"pitches\":[\"D\",\"F#\",\"G#\",\"B\"],\"type\":\"G#m7-5\"},{\"notes\":[61,66,66,69],\"pitches\":[\"C#\",\"F#\",\"F#\",\"A\"],\"type\":\"F#m\"}],\"tensions\":[{\"color\":0,\"dissonance\":0,\"gravity\":0},{\"color\":0.4,\"dissonance\":0.5,\"gravity\":0},{\"color\":0,\"dissonance\":0.8,\"gravity\":0},{\"color\":0,\"dissonance\":0,\"gravity\":0}]}"
 const { chords: ogChords, tensions: ogTensions }  = JSON.parse(jsonData)
@@ -30,11 +30,31 @@ class App extends Component {
     const tonic = 'C'
     const play = false
     const chords = this.getInitialChords(scales, tonic, generate.possibleTypes(scales)[0], tensions)
-    // const spiralRange
+    const spiralRange = this.getSpiralRange(chords)
     this.state = {
-      chords, tensions, scales, tonic, timestep, play
+      chords, tensions, scales, tonic, timestep, play, spiralRange
     }
 }
+
+  getSpiralRange(chordList) {
+    const chordsByBrightness = _.orderBy(chordList, [function(chord) {return brightness.scaleBrightness(chord.tonic, chord.scale)}])
+    const darkest = _.first(chordsByBrightness),
+          brightest = _.last(chordsByBrightness)
+
+    const darkestFifths = brightness.circleOfFifths(darkest.tonic, darkest.scale),
+          brightestFifths = brightness.circleOfFifths(brightest.tonic, brightest.scale)
+    
+    let circleOfFifths = brightness.fifthsBetween(_.first(darkestFifths), _.last(brightestFifths))
+    while (circleOfFifths.length < 24) {
+      if (circleOfFifths.length % 2) {
+        circleOfFifths.push(brightness.fifthsAbove(1, _.last(circleOfFifths)))
+      } else {
+        circleOfFifths = [brightness.fifthsAbove(-1, _.first(circleOfFifths)), ...circleOfFifths]
+      }
+    }
+
+    return circleOfFifths
+  }
 
   getInitialChords(scales, root, type, tensions) {
     const first = generate.initialChord(scales, root, type)
@@ -47,7 +67,6 @@ class App extends Component {
   }
 
   componentDidMount(){
-    // this.chordWorker = new WebWorker(worker)
     this.chordWorker = new chordWorker()
     this.chordWorker.onmessage = (evt) => {
       const [newChord, timestep] = evt.data
@@ -55,7 +74,6 @@ class App extends Component {
       if (timestep < this.state.tensions.length - 1) { 
         const {tensions, chords, scales, tonic} = this.state
         this.generateAndSet(timestep+1)
-        // this.generateAndSet(newChord, this.state.tensions[timestep+1], this.state.scales, timestep + 1)
       }
   }  
     this.progressionW = new progressionWorker()
@@ -68,23 +86,20 @@ class App extends Component {
 
   componentDidUpdate(prevProps, prevState) {
     if (prevState.tonic !== this.state.tonic || prevState.scales.length !== this.state.scales.length) {
-      console.log(this.state.scales)
       this.generateAndSet(0)
     }
-    // if (this.state.play) {
-    //     const {chords, timestep} = this.state
-    //     this.playChord(chords[timestep])
+    if (this.state.play) {
+        const {chords, timestep} = this.state
+        this.playChord(chords[timestep])
 
-    //     setTimeout(() => {
-    //         if (timestep < this.state.tensions.length-1) {
-    //           this.setState(() => ({timestep: timestep+1}))
-    //         } else {
-    //           this.setState(() => ({timestep: 0}))
-    //         }
-    //       }, 1000)
-    // }
-    
-    
+        setTimeout(() => {
+            if (timestep < this.state.tensions.length-1) {
+              this.setState(() => ({timestep: timestep+1}))
+            } else {
+              this.setState(() => ({timestep: 0}))
+            }
+          }, 1000)
+    } 
   }
 
   playChord = (chord) => {
@@ -100,71 +115,38 @@ class App extends Component {
   }
 
   setNewChord = (newChord, timestep) => {
-    // console.log(`new chord in app: ${newChord.tonic + newChord.type} @ timestep${timestep}`)
     const prevChords = this.state.chords
     const newChords = this.changeElementAtIndex(prevChords, newChord, timestep)
     this.setState(() => ({chords: newChords}))  
-    // console.log(this.state.chords)
   }
   
   generateAndSet = (timestepIndex) => {
-    
     const {chords, tensions, scales, tonic} = this.state
-
     const prevChord = chords[timestepIndex - 1],
           tension = tensions[timestepIndex]
 
     this.chordWorker.postMessage({prevChord, tension, scales, timestepIndex, tonic})
   }
 
-  // generateAndSet = (prevChord, tension, scales, timestepIndex) => {
-  //     this.chordWorker.onmessage = (evt) => {
-  //       this.setNewChord(...evt.data)
-  //   }  
-  //     this.chordWorker.postMessage({prevChord, tension, scales, timestepIndex})
+  // restartWorker = () => {
+  //   this.chordWorker.terminate()
+  //   this.chordWorker = new chordWorker()
   // }
-
-  // generateProgressionFrom = (timestep0) => {
-  //   const {tensions, chords, scales, tonic} = this.state
-  //   asyncForEach(tensions, async (tension, timestep) => {
-  //     if (timestep >= timestep0) {
-  //       const prevChord = chords[timestep-1]
-  //       console.log(`prev chord in app: ${prevChord.tonic + prevChord.type} @ timestep${timestep-1}`)
-  //       await this.generateAndSet(prevChord, tensions[timestep], scales, timestep)
-  //     }
-  //   })
-
-  //   this.progressionW.onmessage = (evt) => {
-  //     console.log(evt.data)
-  //   }
-  //   this.progressionW.postMessage({tensions, scales, tonic})
-  // }
-
-  restartWorker = () => {
-    this.chordWorker.terminate()
-    this.chordWorker = new chordWorker()
-  }
 
   onCurveChange = (newTension, timestep) => {
       const {tensions, chords, scales, tonic} = this.state
       const newTensions = this.changeElementAtIndex(tensions, newTension, timestep)
       this.setState(() => ({tensions: newTensions}))  
-  
-    // how to get and terminate prev worker?
       this.generateAndSet(timestep)
-      // this.generateAndSet(chords[timestep - 1], newTension, scales, timestep)
       this.progressionW.postMessage({tensions, scales, tonic})
   }
   
-
   onScaleSelect = (scale) => {
     if (!this.state.scales.includes(scale)) {
         this.setState(({scales: prevScales}) => {
           return {scales: [...prevScales, scale]}
         })  
     }
-
-    // this.generateAndSet(this.tensions, this.scales, this.tonic)
   }
 
   onScaleRemove = (scale) => {
@@ -173,22 +155,14 @@ class App extends Component {
           return {scales: prevScales.filter(s => s !== scale)}
         })
     }
-
-    // this.generateAndSet(this.tensions, this.scales, this.tonic)
   }
 
   onTonicChange = (newTonic) => { 
-      // const changeTonic = (newTonic) => { this.setState((prevState) => {return {tonic: newTonic}}) }
-      // changeTonic(newTonic)
-
       this.setState(function() {
         return {
           tonic: newTonic
         }
       })
-      // this.restartWorker()
-      
-      
   }
  
   onPlayStatusChange = () => {
@@ -202,7 +176,7 @@ class App extends Component {
   }
 
   render() {
-    const {chords, scales, tensions, tonic, play} = this.state
+    const {chords, scales, tensions, tonic, play, timestep, spiralRange} = this.state
     return (
         <div className="App">
             <div className="header panel">
@@ -217,9 +191,9 @@ class App extends Component {
                 onCurveChange={this.onCurveChange}
                 />
             </div>
-            {/* <div ref={spiralRef} className="right panel">
-                <Spiral chord={chords[timestep]} spiralRange={spiralRange}/>
-            </div> */}
+            <div className="right panel">
+                <Spiral chord={chords[timestep]} spiralRange={spiralRange} play={play}/>
+            </div>
             <div className="right options-right panel">
                 <Options
                     selectedScales={scales}
@@ -227,6 +201,7 @@ class App extends Component {
                     onScaleSelect={this.onScaleSelect}
                     onScaleRemove={this.onScaleRemove}
                     onTonicChange={this.onTonicChange}
+                    play={play}
                 />  
             </div>
         </div>

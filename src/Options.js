@@ -1,14 +1,26 @@
-import React from 'react';
+import React, { useLayoutEffect, useRef } from 'react';
 import './App.css';
 import { util } from 'scherz'
 
 const scaleOptions = util.scales
 
-const Options = ({selectedScales, tonic, onScaleSelect, onScaleRemove, onTonicChange})  => {
+const Options = ({selectedScales, tonic, onScaleSelect, onScaleRemove, onTonicChange, play})  => {
+
+  const ref = useRef(null)
+
+  useLayoutEffect(() => {
+      const optionsDiv = ref.current
+      if(play) { // hide options
+        optionsDiv.classList.add("shift-off")
+        optionsDiv.parentElement.classList.add("invisible")
+      } else {
+        optionsDiv.classList.remove("shift-off")
+        optionsDiv.parentElement.classList.remove("invisible")
+      }     
+  }, [play])
 
   const validateScaleSelection = (e) => {
     const scale = e.target.id
-    // debugger
     if(e.target.checked && selectedScales.length + 1 < 4) {
         e.target.classList.add("checked")
         onScaleSelect(scale)
@@ -46,10 +58,8 @@ const Options = ({selectedScales, tonic, onScaleSelect, onScaleRemove, onTonicCh
 
   }
 
-
-
   return (
-    <div id="options-div" >
+    <div ref={ref} id="options-div" >
       <h2>Tonic</h2>
       <div>
         <input className="options" type="text" name="tonic" onChange={validateTonicSelection} value={tonic}/>

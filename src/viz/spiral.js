@@ -165,7 +165,6 @@ const createTextLabels = (ref, camera, markers) => {
 }
 
 const getVector3s = (noteMarkers, chord) => {
-    debugger
     return chord.pitches.map((pitch, i) => 
         noteMarkers.find((marker, index) => {
             const octave = chord.notes[i] - 72
@@ -283,16 +282,16 @@ export const makeSpiral = function (chord, ref) {
 
             this.spiralMesh = drawSpiralMesh(this.scene, points)
             this.markers = drawNoteMarkers(this.scene, points)
-            this.labels = createTextLabels(this.ref, this.camera, this.markers)
+            // this.labels = createTextLabels(this.ref, this.camera, this.markers)
             
-            this.renderer.domElement.classList.add("shift-off", "invisible")
-            this.labels.forEach(l => l.element.classList.add("shift-off", "invisible"))
+            // this.renderer.domElement.classList.add("shift-off", "invisible")
+            // this.labels.forEach(l => l.element.classList.add("shift-off", "invisible"))
             window.addEventListener('resize', handleWindowResize(this.ref, this.camera, this.renderer))
             
             const _this = this
             function animate() {
                 requestAnimationFrame( animate )
-                if (_this.labels) {_this.labels.forEach(l => l.updatePosition(_this.ref, _this.camera))}
+                // if (_this.labels) {_this.labels.forEach(l => l.updatePosition(_this.ref, _this.camera))}
                 _this.renderer.render( _this.scene, _this.camera )
             }
 

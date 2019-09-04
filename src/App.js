@@ -7,11 +7,13 @@ import './App.css';
 import Tone from 'tone';
 import { generate } from 'scherz'
 import chordWorker from "./chord.worker.js"
+import progressionWorker from "./progression.worker.js"
 
 
 const jsonData = "{\"chords\":[{\"notes\":[60,64,67,72],\"pitches\":[\"C\",\"E\",\"G\",\"C\"],\"type\":\"CM\"},{\"notes\":[64,69,69,72],\"pitches\":[\"E\",\"A\",\"A\",\"C\"],\"type\":\"Am\"},{\"notes\":[64,66,69,71],\"pitches\":[\"E\",\"F#\",\"A\",\"B\"],\"type\":\"B7sus4\"},{\"notes\":[62,66,68,71],\"pitches\":[\"D\",\"F#\",\"G#\",\"B\"],\"type\":\"G#m7-5\"},{\"notes\":[61,66,66,69],\"pitches\":[\"C#\",\"F#\",\"F#\",\"A\"],\"type\":\"F#m\"}],\"tensions\":[{\"color\":0,\"dissonance\":0,\"gravity\":0},{\"color\":0.4,\"dissonance\":0.5,\"gravity\":0},{\"color\":0,\"dissonance\":0.8,\"gravity\":0},{\"color\":0,\"dissonance\":0,\"gravity\":0}]}"
 const { chords: ogChords, tensions: ogTensions }  = JSON.parse(jsonData)
 
+// https://codeburst.io/javascript-async-await-with-foreach-b6ba62bbf404
 async function asyncForEach(array, callback) {
   for (let index = 0; index < array.length; index++) {
     await callback(array[index], index, array);
@@ -47,8 +49,13 @@ class App extends Component {
   componentDidMount(){
     // this.chordWorker = new WebWorker(worker)
     this.chordWorker = new chordWorker()
+    this.progressionW = new progressionWorker()
+    this.progressionW.onmessage = (evt) => {
+      console.log(evt.data)
+    }
     this.synth = new Tone.PolySynth(4, Tone.Synth).toMaster()
   }
+
 
   componentDidUpdate(prevProps, prevState, snapshot) {
     if (this.state.play) {
@@ -78,37 +85,62 @@ class App extends Component {
   }
 
   setNewChord = (newChord, timestep) => {
-    console.log(timestep)
+    // console.log(`new chord in app: ${newChord.tonic + newChord.type} @ timestep${timestep}`)
     const prevChords = this.state.chords
     const newChords = this.changeElementAtIndex(prevChords, newChord, timestep)
-    this.setState({chords: newChords})  
+    this.setState((prevChords) => {
+      return {chords: newChords}
+    })  
+    // console.log(this.state.chords)
   }
   
   generateAndSet = (prevChord, tension, scales, timestepIndex) => {
-      this.chordWorker.postMessage({prevChord, tension, scales, timestepIndex})
-      this.chordWorker.onmessage = (evt) => {
-          this.setNewChord(...evt.data)
-      }  
-      
+    this.chordWorker.onmessage = (evt) => {
+      const [newChord, timestep] = evt.data
+      this.setNewChord(newChord, timestep)
+      if (timestep < this.state.tensions.length - 1) { 
+        this.generateAndSet(newChord, this.state.tensions[timestep+1], this.state.scales, timestep + 1)
+      }
+  }  
+    this.chordWorker.postMessage({prevChord, tension, scales, timestepIndex})
   }
 
-  generateProgressionFrom = (timestep0) => {
-    const {tensions, chords, scales} = this.state
-    asyncForEach(tensions, async (tension, timestep) => {
-      if (timestep >= timestep0) {
-        this.generateAndSet(chords[timestep-1], tensions[timestep], scales, timestep)
-      }
-    })
+  // generateAndSet = (prevChord, tension, scales, timestepIndex) => {
+  //     this.chordWorker.onmessage = (evt) => {
+  //       this.setNewChord(...evt.data)
+  //   }  
+  //     this.chordWorker.postMessage({prevChord, tension, scales, timestepIndex})
+  // }
+
+  // generateProgressionFrom = (timestep0) => {
+  //   const {tensions, chords, scales, tonic} = this.state
+  //   asyncForEach(tensions, async (tension, timestep) => {
+  //     if (timestep >= timestep0) {
+  //       const prevChord = chords[timestep-1]
+  //       console.log(`prev chord in app: ${prevChord.tonic + prevChord.type} @ timestep${timestep-1}`)
+  //       await this.generateAndSet(prevChord, tensions[timestep], scales, timestep)
+  //     }
+  //   })
+
+  //   this.progressionW.onmessage = (evt) => {
+  //     console.log(evt.data)
+  //   }
+  //   this.progressionW.postMessage({tensions, scales, tonic})
+  // }
+
+  restartWorker = () => {
+    this.chordWorker.terminate()
+    this.chordWorker = new chordWorker()
   }
 
   onCurveChange = (newTension, timestep) => {
-      const {tensions, chords, scales} = this.state
+      const {tensions, chords, scales, tonic} = this.state
       const newTensions = this.changeElementAtIndex(tensions, newTension, timestep)
       this.setState({tensions: newTensions})
   
     // how to get and terminate prev worker?
-      // this.generateAndSet(chords[timestep - 1], newTension, scales, timestep)
-    this.generateProgressionFrom(timestep)
+      this.generateAndSet(chords[timestep - 1], newTension, scales, timestep)
+      this.progressionW.postMessage({tensions, scales, tonic})
   }
   
 
@@ -130,7 +162,9 @@ class App extends Component {
 
   onTonicChange = (tonic) => { 
       this.setState({tonic})
-    // this.generateAndSet(this.tensions, this.scales, this.tonic)
+      this.restartWorker()
+      this.getInitialChord()
+      this.generateProgressionFrom(1)
   }
  
   onPlayStatusChange = () => {
@@ -142,7 +176,6 @@ class App extends Component {
 
   render() {
     const {chords, scales, tensions, tonic, play} = this.state
-    console.log("render")
     return (
         <div className="App">
             <div className="header panel">

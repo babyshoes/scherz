@@ -178,7 +178,7 @@ export const drawCurve = (play, ref, xScale, tensions, onCurveChange, active, on
         clearDimensionInfo()
 
         const timestep = d.xPos
-        onCurveChange(data[timestep], timestep)
+        if(timestep > 0) { onCurveChange(data[timestep], timestep) }
     }
         
     // const drag = (index) => {

@@ -14,7 +14,9 @@ const Options = ({selectedScales, tonic, onScaleSelect, onScaleRemove, onTonicCh
   const validateScaleSelection = (e) => {
     const scale = e.target.id
     if(e.target.checked) {
-      onScaleSelect(scale)
+      if(selectedScales.length + 1 < 4) {
+        onScaleSelect(scale)
+      }
     } else {
       onScaleRemove(scale)
     }

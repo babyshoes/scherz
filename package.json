@@ -9,7 +9,7 @@
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
     "react-scripts": "3.0.1",
-    "scherz": "^0.1.5",
+    "scherz": "^0.1.6",
     "three": "^0.106.2",
     "three-orbitcontrols": "^2.102.2",
     "tone": "^13.4.9",
@@ -19,7 +19,7 @@
     "start": "react-app-rewired start",
     "build": "react-app-rewired build",
     "test": "react-app-rewired test --env=jsdom",
-    "eject": "react-scripts eject"  
+    "eject": "react-scripts eject"
   },
   "eslintConfig": {
     "extends": "react-app"

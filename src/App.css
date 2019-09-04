@@ -231,20 +231,11 @@ h2 {
   
 }
 
-
-
 input.checkbox {
   display: block;
   height: 53px;
   margin: 0 0 -53px -9999px;
-  order: 4;
   outline: none;
-  counter-increment: undone-items;
-}
-
-input:checked {
-  order: 2;
-  counter-increment: done-items;  
 }
 
 label {
@@ -267,15 +258,11 @@ label::before {
   font: 1em 'FontAwesome';
 }
 
-input:checked + label::before {
-  content: '\f058'; /* circle checkmark */
+input.checked + label::before {
+  content: '\f058'; 
   /* color: var(--accent-color3) */
 }
 
-
-/* input[type="checkbox"] {
-  transform: scale(0.8);
-} */
 input[type=text], textarea {
   -webkit-transition: all 0.30s ease-in-out;
   -moz-transition: all 0.30s ease-in-out;

@@ -2,28 +2,21 @@ import React from 'react';
 import './App.css';
 import { util } from 'scherz'
 
-// possible scales?
-// const scaleOptions = ['major', 'minor', 'lydian', 'dorian']
-
-const scaleOptions = util.scales//.slice(0, 10)
-// const restOfScaleOptions = scales.slice(10)
-// debugger
+const scaleOptions = util.scales
 
 const Options = ({selectedScales, tonic, onScaleSelect, onScaleRemove, onTonicChange})  => {
 
   const validateScaleSelection = (e) => {
     const scale = e.target.id
-    if(e.target.checked) {
-      if(selectedScales.length + 1 < 4) {
-        onScaleSelect(scale)
-      }
-    } else {
-      onScaleRemove(scale)
-    }
-    
-    // selectedScales = [...selectedScales, scale]
     // debugger
-    // onScaleSelect(selectedScales)
+    if(e.target.checked && selectedScales.length + 1 < 4) {
+        e.target.classList.add("checked")
+        onScaleSelect(scale)
+    } else if(selectedScales.length > 1) {
+        e.target.classList.remove("checked")
+        onScaleRemove(scale)
+    } 
+
   }
 
   const validateTonicSelection = (e) => {
@@ -44,9 +37,9 @@ const Options = ({selectedScales, tonic, onScaleSelect, onScaleRemove, onTonicCh
 
   const makeChecklist = () => {
     return scaleOptions.map((scale, index) => {
-      // const checked = selectedScales.includes(scale)
+      const checked = selectedScales.includes(scale) ? "checked" : ""
       return <div key={index}>
-        <input className="checkbox" key={`scale-${index}`} id={scale} type="checkbox" onChange={validateScaleSelection}/> 
+        <input className={`checkbox ${checked}`} key={`scale-${index}`} id={scale} type="checkbox" onChange={validateScaleSelection}/> 
         <label key={`scale-label-${index}`} htmlFor={scale}>{scale}</label>
       </div>
     })
@@ -62,41 +55,11 @@ const Options = ({selectedScales, tonic, onScaleSelect, onScaleRemove, onTonicCh
         <input className="options" type="text" name="tonic" onChange={validateTonicSelection} value={tonic}/>
       </div>
       <br/>
-      {/* <div> */}
-        {/* <span>{tonic}</span> */}
-        {/* </div> */}
       <h2>Scales</h2>
       
       <div className="scale-list">
       {makeChecklist()}
       </div>
-      {/* <h2>Test</h2> */}
-      
-      {/* <p onClick={showRest}>See more</p> */}
-      {/* <select className="options" onChange={validateScaleSelection} value="default">
-        <option value="default" disabled>
-          select a scale
-        </option>
-        { scaleOptions
-          .filter(scale => 
-            !selectedScales.includes(scale))
-          .map((scale, index) =>
-          <option 
-            value={scale} 
-            key={index}
-          > 
-            {scale} 
-          </option>
-        )}
-      </select> */}
-      {/* <div>
-        { selectedScales.map( (scale, index) => 
-          <div key={index}>
-            <span onClick={() => onScaleRemove(scale)}>x</span>
-            <span> {scale}</span>
-          </div>
-        )}
-      </div>   */}
       <div>
         
       </div>

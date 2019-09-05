@@ -5,7 +5,7 @@ import { generate } from 'scherz'
 self.addEventListener('message', (evt) => {
     // const data = JSON.parse(evt.data)
     const data = evt.data
-
+    console.log(data)
     // console.log(`prevChord in worker: ${data.prevChord.tonic + data.prevChord.type}`)
     let nextChord = null
     if (data.timestepIndex > 0) {

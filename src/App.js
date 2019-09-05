@@ -82,7 +82,16 @@ class App extends Component {
     this.typesWorker = new typesWorker()
     this.typesWorker.onmessage = (evt) => {
       const possibleTypes = evt.data
-      this.setState(() => ({types: possibleTypes}))
+      if(!possibleTypes.includes(this.state.tonicType)) {
+        this.setState(() => ({
+          tonicType: possibleTypes[0],
+          types: possibleTypes
+        }), () => {this.generateAndSet(0)}
+      )
+      } else {
+        this.setState(() => ({types: possibleTypes}))
+      }
+      
     }
 
     this.progressionW = new progressionWorker()
@@ -94,13 +103,10 @@ class App extends Component {
 
 
   componentDidUpdate(prevProps, prevState) {
-    if (prevState.tonic !== this.state.tonic) {
+    if (prevState.tonic !== this.state.tonic || prevState.tonicType !== this.state.tonicType) {
       this.generateAndSet(0)
     }
-    if (prevState.scales.length !== this.state.scales.length) {
-      this.generateAndSet(0)
-      this.typesWorker.postMessage(this.state.scales)
-    }
+
     if (this.state.play) {
         const {chords, timestep} = this.state
         this.playChord(chords[timestep])
@@ -147,17 +153,19 @@ class App extends Component {
   // }
 
   onCurveChange = (newTension, timestep) => {
-      const {tensions, chords, scales, tonic} = this.state
+      const {tensions, chords, scales, tonic, tonicType} = this.state
       const newTensions = this.changeElementAtIndex(tensions, newTension, timestep)
       this.setState(() => ({tensions: newTensions}))  
       this.generateAndSet(timestep)
-      this.progressionW.postMessage({tensions, scales, tonic})
+      this.progressionW.postMessage({tensions, scales, tonic, tonicType})
   }
   
   onScaleSelect = (scale) => {
     if (!this.state.scales.includes(scale)) {
         this.setState(({scales: prevScales}) => {
           return {scales: [...prevScales, scale]}
+        }, () => {
+          this.typesWorker.postMessage(this.state.scales)
         })  
     }
   }
@@ -166,6 +174,8 @@ class App extends Component {
     if (this.state.scales.length > 1 && this.state.scales.includes(scale)) {
         this.setState(({scales: prevScales}) => {
           return {scales: prevScales.filter(s => s !== scale)}
+        }, () => {
+          this.typesWorker.postMessage(this.state.scales)
         })
     }
   }
@@ -179,8 +189,10 @@ class App extends Component {
   }
 
   onTypeChange = (newType) => {
-    this.setState(() => ({tonicType: newType}),
-      () => {return this.generateAndSet(0)}
+    this.setState( ({types: possibleTypes}) => {
+      if (possibleTypes.includes(newType)) {
+        return {tonicType: newType}
+      }}
     )
   }
  

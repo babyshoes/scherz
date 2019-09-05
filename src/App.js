@@ -7,6 +7,7 @@ import './App.css';
 import Tone from 'tone';
 import { generate, brightness } from 'scherz'
 import chordWorker from "./chord.worker.js"
+import typesWorker from "./types.worker.js"
 import progressionWorker from "./progression.worker.js"
 import _ from 'lodash'
 
@@ -29,10 +30,12 @@ class App extends Component {
     const timestep = 0
     const tonic = 'C'
     const play = false
-    const chords = this.getInitialChords(scales, tonic, generate.possibleTypes(scales)[0], tensions)
+    const types = generate.possibleTypes(scales)
+    const tonicType = types[0]
+    const chords = this.getInitialChords(scales, tonic, tonicType, tensions)
     const spiralRange = this.getSpiralRange(chords)
     this.state = {
-      chords, tensions, scales, tonic, timestep, play, spiralRange
+      chords, tensions, scales, types, tonic, tonicType, timestep, play, spiralRange
     }
 }
 
@@ -76,6 +79,12 @@ class App extends Component {
         this.generateAndSet(timestep+1)
       }
   }  
+    this.typesWorker = new typesWorker()
+    this.typesWorker.onmessage = (evt) => {
+      const possibleTypes = evt.data
+      this.setState(() => ({types: possibleTypes}))
+    }
+
     this.progressionW = new progressionWorker()
     this.progressionW.onmessage = (evt) => {
       console.log(evt.data)
@@ -85,8 +94,12 @@ class App extends Component {
 
 
   componentDidUpdate(prevProps, prevState) {
-    if (prevState.tonic !== this.state.tonic || prevState.scales.length !== this.state.scales.length) {
+    if (prevState.tonic !== this.state.tonic) {
       this.generateAndSet(0)
+    }
+    if (prevState.scales.length !== this.state.scales.length) {
+      this.generateAndSet(0)
+      this.typesWorker.postMessage(this.state.scales)
     }
     if (this.state.play) {
         const {chords, timestep} = this.state
@@ -121,11 +134,11 @@ class App extends Component {
   }
   
   generateAndSet = (timestepIndex) => {
-    const {chords, tensions, scales, tonic} = this.state
+    const {chords, scales, tensions, tonic, tonicType, types} = this.state
     const prevChord = chords[timestepIndex - 1],
           tension = tensions[timestepIndex]
 
-    this.chordWorker.postMessage({prevChord, tension, scales, timestepIndex, tonic})
+    this.chordWorker.postMessage({prevChord, tension, timestepIndex, tonic, tonicType, types, scales})
   }
 
   // restartWorker = () => {
@@ -164,11 +177,16 @@ class App extends Component {
         }
       })
   }
+
+  onTypeChange = (newType) => {
+    this.setState(() => ({tonicType: newType}),
+      () => {return this.generateAndSet(0)}
+    )
+  }
  
   onPlayStatusChange = () => {
       this.setState( ({play: prevPlay}) => {
         return {
-            // play: !this.state.play, 
             play: !prevPlay,
             timestep: 0
         }
@@ -176,7 +194,7 @@ class App extends Component {
   }
 
   render() {
-    const {chords, scales, tensions, tonic, play, timestep, spiralRange} = this.state
+    const {chords, scales, types, tensions, tonic, play, timestep, spiralRange} = this.state
     return (
         <div className="App">
             <div className="header panel">
@@ -198,9 +216,11 @@ class App extends Component {
                 <Options
                     selectedScales={scales}
                     tonic={tonic}
+                    possibleTypes={types}
                     onScaleSelect={this.onScaleSelect}
                     onScaleRemove={this.onScaleRemove}
                     onTonicChange={this.onTonicChange}
+                    onTypeChange={this.onTypeChange}
                     play={play}
                 />  
             </div>

@@ -11,8 +11,10 @@ self.addEventListener('message', (evt) => {
     if (data.timestepIndex > 0) {
         nextChord = generate.nextChord(data.scales, data.prevChord, data.tension)
     } else {
-        const possibleType = generate.possibleTypes(data.scales)[0]
-        nextChord = generate.initialChord(data.scales, data.tonic, possibleType)
+        const chordType = data.types.includes(data.tonicType) ? data.tonicType : data.types[0]
+        // const chordType = generate.types(data.scales)[0]
+        // debugger
+        nextChord = generate.initialChord(data.scales, data.tonic, chordType)
     }
     
     postMessage([nextChord, data.timestepIndex])

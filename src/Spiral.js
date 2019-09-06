@@ -3,20 +3,40 @@ import React, { useLayoutEffect, useRef } from 'react';
 import { makeSpiral } from './viz/spiral'
 import './App.css';
 
+const spiral = makeSpiral()
+
 export default function Spiral ({chord, spiralRange, play}) {
 
     const ref = useRef(null)
-    const spiral = makeSpiral()
+    // let spiral = null
+    // const spiral = makeSpiral(spiralRange)
 
     useLayoutEffect(() => {
+        // spiral = makeSpiral(ref, spiralRange)
         if (ref.current.clientWidth > 0 && ref.current.className === "first-load") {
-            spiral.build(ref)
-            spiral.updateChordPlane(chord)
+            console.log("first build")
+            spiral.build(ref, spiralRange)
             ref.current.className = ""
+        } else if (spiral.spiralRange !== spiralRange) {
+            // tear down spiral
+            spiral.build(ref.spiralRange)
         } else {
             spiral.updateChordPlane(chord)
         }
-    }, [chord])
+
+    }, [spiralRange, chord])
+
+    // useLayoutEffect(() => {
+    //     spiral.updateChordPlane(chord)
+    //     // if (spiral && ref.current.clientWidth > 0 && ref.current.className === "first-load") {
+    //     //     spiral.build()
+    //     //     // spiral.updateChordPlane(chord)
+    //     //     ref.current.className = ""
+    //     // } else {
+    //     //     debugger
+    //     //     spiral.updateChordPlane(chord)
+    //     // }
+    // }, [chord])
 
     useLayoutEffect(() => {
         const spiralDiv = ref.current

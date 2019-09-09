@@ -67,9 +67,9 @@ const getNumRevs = (spiralRange) => {
     return spiralRange.length / 12
 }
 
-const calculateSpiralPoints = (topY, bottomY) => {
-    // const numRevs = getNumRevs(spiralRange)
-    const numRevs = 2
+const calculateSpiralPoints = (topY, bottomY, spiralRange) => {
+    const numRevs = getNumRevs(spiralRange)
+    // const numRevs = 2
     const stepsPerRev = 120
     const radian = (Math.PI * 2) / stepsPerRev
 
@@ -157,6 +157,7 @@ const textLabel = function(ref) {
         },
         get2DCoords: function(ref, position, camera) {
             if (!ref.current) {debugger}
+            if (ref.current === null) {debugger}
             const width = ref.current.offsetWidth
             
             const height = ref.current.offsetHeight
@@ -180,12 +181,12 @@ const textLabel = function(ref) {
 
 //     })
 // }
+
 const createTextLabels = (ref, camera, markers) => {
     const positionedLabels = markers.map(ptMesh => {
         const label = textLabel(ref)
         label.setHTML(ptMesh.name)
         label.setParent(ptMesh) 
-        // if (!ref.current) {debugger}
         ref.current.appendChild(label.element)
         
         label.updatePosition(ref, camera)
@@ -194,11 +195,21 @@ const createTextLabels = (ref, camera, markers) => {
 
     return positionedLabels
 }
+// const createTextLabels = (ref, camera, markers) => {
+//     const positionedLabels = markers.map(ptMesh => {
+//         const label = textLabel(ref)
+//         label.setHTML(ptMesh.name)
+//         label.setParent(ptMesh) 
+//         ref.current.appendChild(label.element)
+        
+//         label.updatePosition(ref, camera)
+//         return label
+//     })
+
+//     return positionedLabels
+// }
 
 const getVector3s = (noteMarkers, chord) => {
-    
-    // const test = pitchBrightness("C")
-    // debugger
     return [...chord.pitches]
         .sort((a,b) => brightness.pitchBrightness(a) - brightness.pitchBrightness(b))
         .map((pitch, i) => 
@@ -220,9 +231,6 @@ const drawChordPlane = (scene, noteMarkers, chord, color) => {
     // const colorChoices = ['#3da4ab', '#f6cd61', '#fe8a71']
 
     const chordVector3s = getVector3s(noteMarkers, chord)
-    // sort by brightness
-
-    // debugger
     const geometry = new THREE.Geometry()
     geometry.vertices.push(...chordVector3s)
     // geometry.faces.push(new THREE.Face3(0, 3, 2), new THREE.Face3(0, 1, 3))
@@ -253,24 +261,25 @@ const removeLabels = (ref) => {
 
 const removeChordPlane = (scene) => {
     const chordPlaneMesh = scene.children.find(m => m.name.slice(0,5) === "chord")
-    // debugger
     if (chordPlaneMesh) {
         scene.remove(chordPlaneMesh)
     }
-    
+}
+
+const removeNoteMarkers = (scene, markers) => {
+    scene.remove.apply(scene, markers) 
 }
 
 const fadePrevPlanes = (scene) => {
     const meshes = scene.children.filter(m => m.name.slice(0,5) === "chord")
-    // debugger
     if(meshes.length > 0) {
         meshes.forEach(mesh => mesh.material.opacity = Math.max(0, mesh.material.opacity - 0.3))
     }
-    // debugger
 }
 
-const getCatmullPoints = () => {
-    const spiralPoints = calculateSpiralPoints(5, -5)
+const getCatmullPoints = (spiralRange) => {
+    // const spiralPoints = calculateSpiralPoints(10, -10)
+    const spiralPoints = calculateSpiralPoints(4, -4, spiralRange)
     const curve = new THREE.CatmullRomCurve3(spiralPoints)
     return curve.getPoints(2400)
 }
@@ -313,8 +322,8 @@ export const makeSpiral = function () {
     const renderer = buildRenderer()
     // const controls = buildControls(camera, ref.current)
 
-    const points = getCatmullPoints()
-    const spiralMesh = drawSpiralMesh(scene, points)
+    // const points = getCatmullPoints()
+    // const spiralMesh = drawSpiralMesh(scene, points)
     // const markers = drawNoteMarkers(spiralRange, scene, points)
     // const labels = createTextLabels(ref, camera, markers)
 
@@ -363,10 +372,10 @@ export const makeSpiral = function () {
             // this.camera = buildCamera(width, height)
             // this.renderer = buildRenderer(this.ref, width, height)
             // this.controls = buildControls(camera, this.ref.current)
-
-            // this.spiralMesh = drawSpiralMesh(scene, points)
+            this.points = getCatmullPoints(this.spiralRange)
+            this.spiralMesh = drawSpiralMesh(scene, this.points)
             // removeLabels(this.ref)
-            this.markers = drawNoteMarkers(this.spiralRange, scene, points)
+            this.markers = drawNoteMarkers(this.spiralRange, scene, this.points)
             this.labels = createTextLabels(this.ref, camera, this.markers)
             
             // debugger
@@ -378,10 +387,11 @@ export const makeSpiral = function () {
 
             function animate() {
                 requestAnimationFrame( animate )
-                // debugger
-                // if (!_this.ref.current) {debugger}
+                if (!_this.ref.current) {console.log(ref); debugger}
+                if (_this.ref.current === null) {debugger}
                 if (_this.labels) {
-                    // debugger
+                    // removeLabels(_this.ref)
+                    // _this.labels = createTextLabels(_this.ref, camera, _this.markers)
                     _this.labels.forEach(l => l.updatePosition(_this.ref, camera))
                 }
                 // if (_this.labels) {_this.labels.forEach(l => l.updatePosition(_this.ref, camera))}
@@ -389,13 +399,23 @@ export const makeSpiral = function () {
             }
             animate()
         }, 
+
+        draw: function (spiralRange) {
+            this.markers = drawNoteMarkers(this.spiralRange, scene, this.points)
+            this.labels = createTextLabels(this.ref, camera, this.markers)
+        },
+
+        // tearDown: function () {
+        //     removeNoteMarkers()
+        //     removeLabels()
+        // },
        
         updateChordPlane: function (chord, color) {
             console.log("drawing chord plane")
             // removeLabels(this.ref)
             removeChordPlane(scene)
             // fadePrevPlanes(scene)
-            // this.labels = createTextLabels(this.ref, this.camera, this.markers)
+            // this.labels = createTextLabels(this.ref, camera, this.markers)
             // debugger
             drawChordPlane(scene, this.markers, chord, color)
         }   

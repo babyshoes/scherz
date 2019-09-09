@@ -13,7 +13,7 @@ self.addEventListener('message', (evt) => {
           brightestFifths = brightness.circleOfFifths(brightest.tonic, brightest.scale)
     
     let circleOfFifths = brightness.fifthsBetween(_.first(darkestFifths), _.last(brightestFifths))
-    while (circleOfFifths.length < 24) {
+    while (circleOfFifths.length < 36) {
       if (circleOfFifths.length % 2) {
         circleOfFifths.push(brightness.fifthsAbove(1, _.last(circleOfFifths)))
       } else {

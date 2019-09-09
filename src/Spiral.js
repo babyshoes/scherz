@@ -17,11 +17,13 @@ export default function Spiral ({chord, spiralRange, play, color}) {
             console.log("first build")
             spiral.build(ref, spiralRange)
             ref.current.className = ""
-        } else if (spiral.spiralRange !== spiralRange) {
-            debugger
-            // tear down spiral
-            spiral.build(ref.spiralRange)
+        // } else if (spiral.spiralRange !== spiralRange) {
+        //     debugger
+        //     // tear down spiral
+        //     spiral.build(ref.spiralRange)
         } else {
+            if (!ref.current) {debugger}
+            if (ref.current === null) {debugger}
             spiral.updateChordPlane(chord, color)
         }
 

@@ -67,9 +67,15 @@ const getNumRevs = (spiralRange) => {
     return spiralRange.length / 12
 }
 
+<<<<<<< HEAD
 const calculateSpiralPoints = (topY, bottomY, spiralRange) => {
     const numRevs = getNumRevs(spiralRange)
     // const numRevs = 2
+=======
+const calculateSpiralPoints = (topY, bottomY) => {
+    // const numRevs = getNumRevs(spiralRange)
+    const numRevs = 2
+>>>>>>> 9c343e67e8da89051667604bfbd0c12ca91f3486
     const stepsPerRev = 120
     const radian = (Math.PI * 2) / stepsPerRev
 
@@ -187,6 +193,10 @@ const createTextLabels = (ref, camera, markers) => {
         const label = textLabel(ref)
         label.setHTML(ptMesh.name)
         label.setParent(ptMesh) 
+<<<<<<< HEAD
+=======
+        // if (!ref.current) {debugger}
+>>>>>>> 9c343e67e8da89051667604bfbd0c12ca91f3486
         ref.current.appendChild(label.element)
         
         label.updatePosition(ref, camera)

@@ -5,7 +5,7 @@ import './App.css';
 
 const spiral = makeSpiral()
 
-export default function Spiral ({chord, spiralRange, play}) {
+export default function Spiral ({chord, spiralRange, play, color}) {
 
     const ref = useRef(null)
     // let spiral = null
@@ -18,10 +18,11 @@ export default function Spiral ({chord, spiralRange, play}) {
             spiral.build(ref, spiralRange)
             ref.current.className = ""
         } else if (spiral.spiralRange !== spiralRange) {
+            debugger
             // tear down spiral
             spiral.build(ref.spiralRange)
         } else {
-            spiral.updateChordPlane(chord)
+            spiral.updateChordPlane(chord, color)
         }
 
     }, [spiralRange, chord])

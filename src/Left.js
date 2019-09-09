@@ -4,7 +4,7 @@ import { drawCurve } from './viz/curve'
 import './App.css';
 import { getxScale } from './viz/util';
 
-export default ({play, numTimesteps, chords, tensions, onCurveChange}) => {
+export default ({play, timestep, color, numTimesteps, chords, tensions, onCurveChange}) => {
     const staffRef = useRef(null)
     const curveRef = useRef(null)
     const [active, setActive] = useState("color")
@@ -15,7 +15,7 @@ export default ({play, numTimesteps, chords, tensions, onCurveChange}) => {
 
     useLayoutEffect(() => {
         const xScale = getxScale(numTimesteps)
-        drawStaff(staffRef, xScale, chords)
+        drawStaff(play, timestep, color, staffRef, xScale, chords)
         drawCurve(play, curveRef, xScale, tensions, onCurveChange, active, onActiveChange)
     })
 

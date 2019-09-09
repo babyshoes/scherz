@@ -6,6 +6,7 @@ import OrbitControls from 'three-orbitcontrols'
 import * as THREE from 'three'
 import _ from 'lodash'
 import { Camera } from 'three';
+import { brightness } from 'scherz';
 
 // const circleOfFifths = ['C', 'G', 'D', 'A', 'E', 'B', 'Gb', 'Db', 'Ab', 'Eb', 'Bb', 'F']
 
@@ -195,12 +196,23 @@ const createTextLabels = (ref, camera, markers) => {
 }
 
 const getVector3s = (noteMarkers, chord) => {
-    return chord.pitches.map((pitch, i) => 
+    
+    // const test = pitchBrightness("C")
+    // debugger
+    return [...chord.pitches]
+        .sort((a,b) => brightness.pitchBrightness(a) - brightness.pitchBrightness(b))
+        .map((pitch, i) => 
         noteMarkers.find((marker, index) => {
-            const octave = chord.notes[i] - 72
+            // const octave = chord.notes[i] - 72
             return pitch.toLowerCase() === marker.name.toLowerCase() // && index >= (octave * 12)
         }).position
     )
+    // return chord.pitches.map((pitch, i) => 
+    //     noteMarkers.find((marker, index) => {
+    //         // const octave = chord.notes[i] - 72
+    //         return pitch.toLowerCase() === marker.name.toLowerCase() // && index >= (octave * 12)
+    //     }).position
+    // )
 }
 
 const drawChordPlane = (scene, noteMarkers, chord, color) => {
@@ -208,9 +220,12 @@ const drawChordPlane = (scene, noteMarkers, chord, color) => {
     // const colorChoices = ['#3da4ab', '#f6cd61', '#fe8a71']
 
     const chordVector3s = getVector3s(noteMarkers, chord)
+    // sort by brightness
 
+    // debugger
     const geometry = new THREE.Geometry()
     geometry.vertices.push(...chordVector3s)
+    // geometry.faces.push(new THREE.Face3(0, 3, 2), new THREE.Face3(0, 1, 3))
     geometry.faces.push(new THREE.Face3(2, 1, 0), new THREE.Face3(3, 2, 0))
     const material = new THREE.MeshBasicMaterial( {
         // color:0x00ff00, 

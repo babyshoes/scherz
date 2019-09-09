@@ -5,7 +5,7 @@ import { makeSVG, baseLayout } from './util'
 // TO DO:
 // - make accidentals placement more dynamic
 
-export const drawStaff = (ref, xScale, chords) => {
+export const drawStaff = (play, timestep, color, ref, xScale, chords) => {
     // lay down layout
     const layout = { 
         ...baseLayout,
@@ -130,7 +130,9 @@ export const drawStaff = (ref, xScale, chords) => {
     notesAndAccidentals.append("circle")
         .attr("cx", d => d.offset * amtOffset )
         .attr("r", 8)
-        .attr("fill", "none")
+        .style("stroke", d => { return play && d.xPos === timestep ? color : "white" })
+        // .attr("fill", "none")
+        // .attr("class", d => `timestep-${d.xPos}`)
     
     // draw accidentals
     notesAndAccidentals.append("text")

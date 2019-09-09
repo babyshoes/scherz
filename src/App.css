@@ -59,6 +59,18 @@ circle {
   border: 5px;
 }
 
+circle.color1 {
+  fill: var(--accent-color1);
+}
+
+circle.color2 {
+  fill: var(--accent-color2);
+}
+
+circle.color3 {
+  fill: var(--accent-color3);
+}
+
 canvas {
   transition: all 1s;
 }

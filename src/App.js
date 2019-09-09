@@ -50,7 +50,7 @@ class App extends Component {
           brightestFifths = brightness.circleOfFifths(brightest.tonic, brightest.scale)
     
     let circleOfFifths = brightness.fifthsBetween(_.first(darkestFifths), _.last(brightestFifths))
-    while (circleOfFifths.length < 24) {
+    while (circleOfFifths.length < 36) {
       if (circleOfFifths.length % 2) {
         circleOfFifths.push(brightness.fifthsAbove(1, _.last(circleOfFifths)))
       } else {
@@ -138,10 +138,7 @@ class App extends Component {
   }
 
   playChord = (chord) => {
-    const chordNotes = chord.pitches.map((note, i) => {
-      const octave = Math.floor((chord.notes[i] - 60)/12.0) + 4
-      return note + octave.toString()
-    })
+    const chordNotes = chord.notes.map(note => Tone.Midi(note))
     this.synth.triggerAttackRelease(chordNotes, '8n')
   } 
 

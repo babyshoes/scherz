@@ -2,6 +2,13 @@ import * as d3 from 'd3';
 import _ from 'lodash';
 import { baseLayout, makeSVG } from './util'
 
+
+const dimBlurbs = {
+    color: 'allows chords to venture further out in the circle of fifths',
+    dissonance: 'results in more "unnatural" sounding chords',
+    gravity: 'prioritizes half step resolutions and tighter voice leading'
+} 
+
 export const drawCurve = (play, ref, xScale, tensions, onCurveChange, active, onActiveChange) => {
     let data = tensions
 
@@ -36,6 +43,14 @@ export const drawCurve = (play, ref, xScale, tensions, onCurveChange, active, on
         .attr("y", 75)
         .attr("font-family", "sans-serif")
         .attr("font-size", "20px")
+    
+    const legendDesc = svg.append("text")
+        .attr("class", "annotate")
+        .attr("x", layout.width - 30)
+        .attr("y", 75)
+        .attr("font-family", "sans-serif")
+        .attr("font-size", "20px")
+        // .style("transform", "translate(-100, 0)")
 
     const addPoint = () => {
         if(!play) {
@@ -76,7 +91,7 @@ export const drawCurve = (play, ref, xScale, tensions, onCurveChange, active, on
     }
 
     function displayDimensionInfo (d) {
-        legend.selectAll("tspan").remove()
+        clearDimensionInfo()
         let string = `${d.key}`
         legend.append("tspan")
             .attr("class", "label")
@@ -99,14 +114,24 @@ export const drawCurve = (play, ref, xScale, tensions, onCurveChange, active, on
                 }
         }
 
-        const description = node !== null ? `: ${node.data[d.key].toFixed(1)}` : ""
+        const dimVal = node !== null ? `: ${node.data[d.key].toFixed(1)}` : ""
 
         legend.append("tspan")
             .attr("class", "label")
-            .text(description)
+            .text(dimVal)
+
+        const dimDesc = dimBlurbs[d.key]
+        legendDesc.append("tspan")
+            .attr("class", "desc")
+            .style("text-anchor", "end")
+            // .attr("x", "100%")
+            .text(dimDesc)
     } 
 
-    const clearDimensionInfo = d => legend.selectAll("tspan").remove()
+    const clearDimensionInfo = () => {
+        legend.selectAll("tspan").remove()
+        legendDesc.selectAll("tspan").remove()
+    }
 
     const updateAreaPlot = (stacked) =>
         svg

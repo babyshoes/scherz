@@ -51,7 +51,7 @@ const Options = ({selectedScales, tonic, possibleTypes, onScaleSelect, onScaleRe
         && (accidentals.size === 0
           || (accidentals.size === 1 && (accidentals.has("b") || accidentals.has("#"))))
         ) {
-          onTonicChange(tonic.toUpperCase())
+          onTonicChange(baseNote.toUpperCase() + tonic.slice(1))
         }
     }
   }

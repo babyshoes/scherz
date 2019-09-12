@@ -67,15 +67,9 @@ const getNumRevs = (spiralRange) => {
     return spiralRange.length / 12
 }
 
-<<<<<<< HEAD
 const calculateSpiralPoints = (topY, bottomY, spiralRange) => {
     const numRevs = getNumRevs(spiralRange)
     // const numRevs = 2
-=======
-const calculateSpiralPoints = (topY, bottomY) => {
-    // const numRevs = getNumRevs(spiralRange)
-    const numRevs = 2
->>>>>>> 9c343e67e8da89051667604bfbd0c12ca91f3486
     const stepsPerRev = 120
     const radian = (Math.PI * 2) / stepsPerRev
 
@@ -182,21 +176,21 @@ const textLabel = function(ref) {
     }
 }
 
-// const createTextLabels = (markers) => {
-//     return markers.map(ptmesh => {
-
-//     })
-// }
+const activateTextLabels = (labels, chord) => {
+    labels.forEach(l => {
+        if (chord.pitches.includes(l.parent.name)) {
+            l.element.classList.add("active")
+        } else {
+            l.element.classList.remove("active")
+        }
+    })
+}
 
 const createTextLabels = (ref, camera, markers) => {
     const positionedLabels = markers.map(ptMesh => {
         const label = textLabel(ref)
         label.setHTML(ptMesh.name)
         label.setParent(ptMesh) 
-<<<<<<< HEAD
-=======
-        // if (!ref.current) {debugger}
->>>>>>> 9c343e67e8da89051667604bfbd0c12ca91f3486
         ref.current.appendChild(label.element)
         
         label.updatePosition(ref, camera)
@@ -205,15 +199,18 @@ const createTextLabels = (ref, camera, markers) => {
 
     return positionedLabels
 }
-// const createTextLabels = (ref, camera, markers) => {
+
+// const createTextLabels = (ref, camera, markers, circle) => {
 //     const positionedLabels = markers.map(ptMesh => {
-//         const label = textLabel(ref)
-//         label.setHTML(ptMesh.name)
-//         label.setParent(ptMesh) 
-//         ref.current.appendChild(label.element)
-        
-//         label.updatePosition(ref, camera)
-//         return label
+//         if(circle.includes(ptMesh.name)) {
+//             const label = textLabel(ref)
+//             label.setHTML(ptMesh.name)
+//             label.setParent(ptMesh) 
+//             ref.current.appendChild(label.element)
+            
+//             label.updatePosition(ref, camera)
+//             return label
+//         }
 //     })
 
 //     return positionedLabels
@@ -236,6 +233,10 @@ const getVector3s = (noteMarkers, chord) => {
     // )
 }
 
+const getRelCircle = (chord) => {
+    return brightness.circleOfFifths(chord.tonic, chord.scale)
+}
+
 const drawChordPlane = (scene, noteMarkers, chord, color) => {
     // const colorChoices = ['#e27d60', '#c38d9e', '#e8a87c', '#85dcb', '#41b3a3']
     // const colorChoices = ['#3da4ab', '#f6cd61', '#fe8a71']
@@ -251,8 +252,8 @@ const drawChordPlane = (scene, noteMarkers, chord, color) => {
         // color: _.sample(colorChoices),
         color: color,
         side: THREE.DoubleSide,
-        transparent: true,
-        opacity: 0.7
+        // transparent: true,
+        // opacity: 0.7
      })
 
     const mesh = new THREE.Mesh(geometry, material)
@@ -385,8 +386,10 @@ export const makeSpiral = function () {
             this.points = getCatmullPoints(this.spiralRange)
             this.spiralMesh = drawSpiralMesh(scene, this.points)
             // removeLabels(this.ref)
-            this.markers = drawNoteMarkers(this.spiralRange, scene, this.points)
-            this.labels = createTextLabels(this.ref, camera, this.markers)
+
+            this.draw(spiralRange)
+            // this.markers = drawNoteMarkers(this.spiralRange, scene, this.points)
+            // this.labels = createTextLabels(this.ref, camera, this.markers)
             
             // debugger
             // renderer.domElement.classList.add("shift-off", "invisible")
@@ -401,8 +404,8 @@ export const makeSpiral = function () {
                 if (_this.ref.current === null) {debugger}
                 if (_this.labels) {
                     // removeLabels(_this.ref)
-                    // _this.labels = createTextLabels(_this.ref, camera, _this.markers)
-                    _this.labels.forEach(l => l.updatePosition(_this.ref, camera))
+                    // _this.labels = createTextLabels(_this.ref, camera, _this.markers, _this.circle)
+                    _this.labels.forEach(l => {if(l){ l.updatePosition(_this.ref, camera) }} )
                 }
                 // if (_this.labels) {_this.labels.forEach(l => l.updatePosition(_this.ref, camera))}
                 renderer.render( scene, camera )
@@ -415,19 +418,21 @@ export const makeSpiral = function () {
             this.labels = createTextLabels(this.ref, camera, this.markers)
         },
 
-        // tearDown: function () {
-        //     removeNoteMarkers()
-        //     removeLabels()
-        // },
+        tearDown: function () {
+            removeNoteMarkers()
+            removeLabels()
+        },
        
         updateChordPlane: function (chord, color) {
+            this.circle = getRelCircle(chord)
+            // debugger
             console.log("drawing chord plane")
             // removeLabels(this.ref)
             removeChordPlane(scene)
             // fadePrevPlanes(scene)
-            // this.labels = createTextLabels(this.ref, camera, this.markers)
-            // debugger
+            // this.labels = createTextLabels(this.ref, camera, this.markers, this.circle)
             drawChordPlane(scene, this.markers, chord, color)
+            activateTextLabels(this.labels, chord)
         }   
     }
 }

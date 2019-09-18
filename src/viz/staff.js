@@ -126,6 +126,12 @@ export const drawStaff = (play, timestep, color, ref, xScale, chords) => {
     
     const amtOffset = xScale(.1) - xScale(0)
 
+    const adjustOffset = (numAccidentals, factor) => {
+        const amtOffset = xScale(.1) - xScale(0)
+        const increase = Math.abs(numAccidentals) - 1
+        return -amtOffset * (factor + (Math.abs(numAccidentals)/3.0))
+    }
+
     // draw notes
     notesAndAccidentals.append("circle")
         .attr("cx", d => d.offset * amtOffset )
@@ -137,7 +143,8 @@ export const drawStaff = (play, timestep, color, ref, xScale, chords) => {
     // draw accidentals
     notesAndAccidentals.append("text")
         .attr("class", "annotate")
-        .attr("x", d => d.offset ? amtOffset * -2 : amtOffset * -1.3)
+        .attr("x", d => d.offset ? adjustOffset(d.accidental, 2) : adjustOffset(d.accidental, 1.3) )
+        // .attr("x", d => d.offset ? amtOffset * (-2 - Math.abs(d.accidental)) : amtOffset * (-1.3 - Math.abs(d.accidental)))
         // .attr("x", d => d.offset ? xScale(-0.17) : xScale(-0.12))
         // .attr("x", d => xScale((-0.15 * d.offset) - 0.15))
         .attr("dy", ".35em")

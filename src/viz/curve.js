@@ -63,9 +63,10 @@ export const drawCurve = (play, ref, xScale, tensions, onCurveChange, active, on
     }
 
     svg.append("g")
-        .attr("class", "annotate")
+        .attr("class", "add-node")
         .append("text")
-        .text(d => "\uf067")
+        .text(d => { return play ? "\uf111" : "\uf067"})
+        .attr("fill", d => play ? "rgb(255, 255, 255, 0.3)" : "white" )
         .attr("x", 10)
         .attr("y", yScale(0))
         .attr("font-size", 30)

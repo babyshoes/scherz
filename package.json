@@ -10,7 +10,7 @@
     "react-dom": "^16.8.6",
     "react-scripts": "3.0.1",
     "scherz": "^0.1.6",
-    "three": "^0.106.2",
+    "three": "^0.108.0",
     "three-orbitcontrols": "^2.102.2",
     "tone": "^13.4.9",
     "worker-loader": "^2.0.0"

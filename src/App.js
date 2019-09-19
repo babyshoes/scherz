@@ -16,13 +16,6 @@ const jsonData = "{\"chords\":[{\"notes\":[60,64,67,72],\"pitches\":[\"C\",\"E\"
 const { chords: ogChords, tensions: ogTensions }  = JSON.parse(jsonData)
 const colorChoices = ['#3da4ab', '#f6cd61', '#fe8a71']
 
-// https://codeburst.io/javascript-async-await-with-foreach-b6ba62bbf404
-async function asyncForEach(array, callback) {
-  for (let index = 0; index < array.length; index++) {
-    await callback(array[index], index, array);
-  }
-}
-
 class App extends Component {
 
   constructor(props) {
@@ -32,12 +25,13 @@ class App extends Component {
     const tensions = [ {color:0, dissonance:0, gravity:0}, ...ogTensions]
     const scales = ['major']
     const tonic = 'C'
+    const tonicError = null
     const types = generate.possibleTypes(scales)
     const tonicType = types[0]
     const chords = this.getInitialChords(scales, tonic, tonicType, tensions)
     const spiralRange = this.getSpiralRange(chords)
     this.state = {
-      chords, tensions, scales, types, tonic, tonicType, timestep, play, spiralRange
+      chords, tensions, scales, types, tonic, tonicError, tonicType, timestep, play, spiralRange
     }
 }
 
@@ -78,12 +72,14 @@ class App extends Component {
       const {tensions, chords, scales, tonic} = this.state
 
       this.setNewChord(newChord, timestep)
+      // this.spiralWorker.postMessage(chords)
       // convert below into callback for above
-      if (timestep < this.state.tensions.length - 1) { 
+      if (timestep < tensions.length - 1) { 
         this.generateAndSet(timestep+1)
-      } else {
-        this.spiralWorker.postMessage(chords)
       }
+      // } else {
+      //   this.spiralWorker.postMessage(chords)
+      // }
   }  
     this.typesWorker = new typesWorker()
     this.typesWorker.onmessage = (evt) => {
@@ -119,7 +115,7 @@ class App extends Component {
 
 
   componentDidUpdate(prevProps, prevState) {
-    if (prevState.tonic !== this.state.tonic || prevState.tonicType !== this.state.tonicType) {
+    if ((prevState.tonic !== this.state.tonic || prevState.tonicType !== this.state.tonicType)) {
       this.generateAndSet(0)
     }
 
@@ -149,15 +145,20 @@ class App extends Component {
   setNewChord = (newChord, timestep) => {
     const prevChords = this.state.chords
     const newChords = this.changeElementAtIndex(prevChords, newChord, timestep)
+    this.spiralWorker.postMessage(newChords)
     this.setState(() => ({chords: newChords}))  
   }
   
   generateAndSet = (timestepIndex) => {
-    const {chords, scales, tensions, tonic, tonicType, types} = this.state
+    const {chords, scales, tensions, tonic, tonicError, tonicType, types} = this.state
     const prevChord = chords[timestepIndex - 1],
           tension = tensions[timestepIndex]
 
-    this.chordWorker.postMessage({prevChord, tension, timestepIndex, tonic, tonicType, types, scales})
+    if(!tonicError) {
+      this.chordWorker.postMessage({prevChord, tension, timestepIndex, tonic, tonicType, types, scales})
+      
+    }
+    
   }
 
   // restartWorker = () => {
@@ -194,9 +195,26 @@ class App extends Component {
   }
 
   onTonicChange = (newTonic) => { 
+      const format = tonic => tonic ? tonic[0].toUpperCase() + tonic.slice(1) : ""
+      let error = null
+
+      if (newTonic.length == 0) {
+        error = "input a tonic"
+      } else {
+        const baseNote = newTonic[0].toLowerCase()
+        const accidental = new Set(newTonic.slice(1))
+        const invalidAccidental = [...accidental].filter(char => !new Set(["b", "#"]).has(char))
+
+        let errors = []
+        if (!"cdefgab".includes(baseNote)) { errors.push("tonic") }
+        if (accidental.size > 1 || invalidAccidental.length > 0) { errors.push("accidental") }
+        if (errors.length > 0) { error = "not valid " + errors.join(" or ") }
+      }
+
       this.setState(function() {
         return {
-          tonic: newTonic
+          tonic: format(newTonic),
+          tonicError: error
         }
       })
   }
@@ -219,7 +237,7 @@ class App extends Component {
   }
 
   render() {
-    const {chords, scales, types, tensions, tonic, play, timestep, spiralRange} = this.state
+    const {chords, scales, types, tensions, tonic, tonicError, play, timestep, spiralRange} = this.state
     const color = colorChoices[timestep % colorChoices.length]
     return (
         <div className="App">
@@ -244,6 +262,7 @@ class App extends Component {
                 <Options
                   selectedScales={scales}
                   tonic={tonic}
+                  tonicError={tonicError}
                   possibleTypes={types}
                   onScaleSelect={this.onScaleSelect}
                   onScaleRemove={this.onScaleRemove}

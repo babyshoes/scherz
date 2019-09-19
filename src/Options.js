@@ -1,10 +1,11 @@
 import React, { useLayoutEffect, useRef } from 'react';
 import './App.css';
 import { util } from 'scherz'
+import _ from 'lodash'
 
 const scaleOptions = util.scales
 
-const Options = ({selectedScales, tonic, possibleTypes, onScaleSelect, onScaleRemove, onTonicChange, onTypeChange, play})  => {
+const Options = ({selectedScales, tonic, tonicError, possibleTypes, onScaleSelect, onScaleRemove, onTonicChange, onTypeChange, play})  => {
   const ref = useRef(null)
 
   useLayoutEffect(() => {
@@ -41,19 +42,26 @@ const Options = ({selectedScales, tonic, possibleTypes, onScaleSelect, onScaleRe
   }
 
   const validateTonicSelection = (e) => {
+    // debugger
     const tonic = e.target.value
-    
-    if (tonic.length > 0) {
-      const baseNote = tonic[0].toLowerCase()
-      const accidentals = new Set(tonic.slice(1))
+    onTonicChange(tonic)
+    // onTonicChange(tonic[0].toUpperCase() + tonic.slice(1))
+    // if (tonic.length > 0) {
+    //   const baseNote = tonic[0].toLowerCase()
+    //   const accidentals = new Set(tonic.slice(1))
 
-      if ("cdefgab".includes(baseNote) 
-        && (accidentals.size === 0
-          || (accidentals.size === 1 && (accidentals.has("b") || accidentals.has("#"))))
-        ) {
-          onTonicChange(baseNote.toUpperCase() + tonic.slice(1))
-        }
-    }
+      
+    //   if ("cdefgab".includes(baseNote) 
+    //     && (accidentals.size === 0
+    //       || (accidentals.size === 1 && (accidentals.has("b") || accidentals.has("#"))))
+    //     ) {
+    //       onTonicChange(baseNote.toUpperCase() + tonic.slice(1))
+    //     }
+    // }
+  }
+
+  const delayValidate = (e) => {
+    return _.debounce(validateTonicSelection, 150)
   }
 
   const validateTypeSelection = (e) => {
@@ -84,11 +92,16 @@ const Options = ({selectedScales, tonic, possibleTypes, onScaleSelect, onScaleRe
       <h2>Tonic / Chord</h2>
       <div>
         <input className="options" type="text" name="tonic" onChange={validateTonicSelection} value={tonic}/>
+       
         {/* <div className="box"> */}
           <select className="dropdown" onChange={validateTypeSelection}>
             {makeTypesDropdown()}
           </select>
         {/* </div> */}
+        <div className="error">
+          <p className="error-text">{tonicError}</p>
+        </div>
+        
       </div>
       <br/>
       <h2>Scales</h2>

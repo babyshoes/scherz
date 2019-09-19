@@ -262,7 +262,17 @@ h2 {
   font-size: 1.5vw;
   width: 20%;
   text-align: center;
-  
+}
+
+.error {
+  font-size: 1vw;
+  position: relative;
+}
+
+.error-text{
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 input.checkbox {

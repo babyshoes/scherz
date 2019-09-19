@@ -134,7 +134,7 @@ const drawNoteMarkers = (spiralRange, scene, points) => {
 // https://codepen.io/dxinteractive/pen/reNpOR
 const textLabel = function(ref) {
     const textDiv = document.createElement('div')
-    textDiv.className = "note-label"
+    textDiv.className = "note-label invisible shift-off"
     textDiv.style.position = "absolute"
 
     return {
@@ -263,12 +263,24 @@ const drawChordPlane = (scene, noteMarkers, chord, color) => {
 }
 
 const removeLabels = (ref) => {
-    ref.current.childNodes.forEach(n => { 
-        if(n.className === "note-label") {
-            ref.current.removeChild(n)
-        }
-    })
+    Array.from(ref.current.childNodes)
+        .filter(n => n.className.includes("note-label"))
+        .forEach(n => n.remove())
+    // console.log(ref.current.childNodes.length)
+    // let ct = 0
+    // debugger
+    // ref.current.childNodes.forEach(n => { 
+    //     if(n.className.includes("note-label")) {
+    //         n.remove()
+    //         ct += 1
+    //         n.parentNode.removeChild(n)
+    //     }
+    // })
+    // console.log(ct)
+    // console.log(ref.current.childNodes.length)
+    // debugger
 }
+
 
 const removeChordPlane = (scene) => {
     const chordPlaneMesh = scene.children.find(m => m.name.slice(0,5) === "chord")
@@ -387,7 +399,7 @@ export const makeSpiral = function () {
             this.spiralMesh = drawSpiralMesh(scene, this.points)
             // removeLabels(this.ref)
 
-            this.draw(spiralRange)
+            this.draw(this.spiralRange)
             // this.markers = drawNoteMarkers(this.spiralRange, scene, this.points)
             // this.labels = createTextLabels(this.ref, camera, this.markers)
             
@@ -413,24 +425,33 @@ export const makeSpiral = function () {
             animate()
         }, 
 
-        draw: function (spiralRange) {
+        rebuild: function(spiralRange) {
+            this.spiralRange = spiralRange
+            this.tearDown()
+            // this.points = getCatmullPoints(this.spiralRange)
+            // this.spiralMesh = drawSpiralMesh(scene, this.points)
+            
+            this.draw()
+
+        },
+
+        draw: function () {
             this.markers = drawNoteMarkers(this.spiralRange, scene, this.points)
             this.labels = createTextLabels(this.ref, camera, this.markers)
         },
 
         tearDown: function () {
-            removeNoteMarkers()
-            removeLabels()
+            removeLabels(this.ref)
+            this.labels = []
+            removeNoteMarkers(scene, this.markers)
+            this.markers = []
         },
        
         updateChordPlane: function (chord, color) {
-            this.circle = getRelCircle(chord)
-            // debugger
+            // this.circle = getRelCircle(chord)
             console.log("drawing chord plane")
-            // removeLabels(this.ref)
             removeChordPlane(scene)
             // fadePrevPlanes(scene)
-            // this.labels = createTextLabels(this.ref, camera, this.markers, this.circle)
             drawChordPlane(scene, this.markers, chord, color)
             activateTextLabels(this.labels, chord)
         }   

@@ -11,23 +11,39 @@ export default function Spiral ({chord, spiralRange, play, color}) {
     // let spiral = null
     // const spiral = makeSpiral(spiralRange)
 
+    // useLayoutEffect(() => {
+    //     // spiral = makeSpiral(ref, spiralRange)
+    //     if (ref.current.clientWidth > 0 && ref.current.className === "first-load") {
+    //         console.log("first build")
+    //         spiral.build(ref, spiralRange)
+    //         ref.current.className = ""
+    //     } else if (spiral.spiralRange !== spiralRange) {
+            
+    //         spiral.rebuild(spiralRange)
+    //     } else {
+    //         console.log(spiral.labels)
+    //         if (!ref.current) {debugger}
+    //         if (ref.current === null) {debugger}
+    //         spiral.updateChordPlane(chord, color)
+    //     }
+
+    // }, [spiralRange, chord])
+
     useLayoutEffect(() => {
         // spiral = makeSpiral(ref, spiralRange)
         if (ref.current.clientWidth > 0 && ref.current.className === "first-load") {
             console.log("first build")
             spiral.build(ref, spiralRange)
             ref.current.className = ""
-        // } else if (spiral.spiralRange !== spiralRange) {
-        //     debugger
-        //     // tear down spiral
-        //     spiral.build(ref.spiralRange)
         } else {
-            if (!ref.current) {debugger}
-            if (ref.current === null) {debugger}
-            spiral.updateChordPlane(chord, color)
-        }
+            spiral.rebuild(spiralRange)
+        } 
 
-    }, [spiralRange, chord])
+    }, [spiralRange])
+
+    // useLayoutEffect(() => {
+    //     spiral.updateChordPlane(chord, color)
+    // }, [chord])
 
     // useLayoutEffect(() => {
     //     spiral.updateChordPlane(chord)
@@ -43,8 +59,9 @@ export default function Spiral ({chord, spiralRange, play, color}) {
 
     useLayoutEffect(() => {
         const spiralDiv = ref.current
+        
         if(play) {
-            
+            spiral.updateChordPlane(chord, color)
             // ref.current.classList.remove("shift-off", "invisible")
           Array.from(spiralDiv.children)
             .forEach(el => el.classList.remove("shift-off", "invisible"))
@@ -52,7 +69,7 @@ export default function Spiral ({chord, spiralRange, play, color}) {
           Array.from(spiralDiv.children)
             .forEach(el => el.classList.add("shift-off", "invisible"))
         }     
-    }, [play])
+    }, [play, chord])
 
     // useLayoutEffect(() => {
     //     console.log("first draw")

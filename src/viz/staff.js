@@ -2,9 +2,6 @@ import * as d3 from 'd3';
 import _ from 'lodash';
 import { makeSVG, baseLayout } from './util'
 
-// TO DO:
-// - make accidentals placement more dynamic
-
 export const drawStaff = (play, timestep, color, ref, xScale, chords) => {
     // lay down layout
     const layout = { 

@@ -251,6 +251,7 @@ export const drawCurve = (play, ref, xScale, tensions, onCurveChange, active, on
                     )
                     .call(drag)
                     .append('circle')
+                    .attr("r", 5.0)
                     .classed("active", true)
                     .style('fill', (d) => color(d.key) )
                 , update => update

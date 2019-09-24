@@ -2,8 +2,8 @@
 // import { CatmullRomCurve3, BufferGeometry, LineBasicMaterial, Line, Geometry} from 'three';
 // import { LineSegments, OrbitControls } from 'three';
 
-import OrbitControls from 'three-orbitcontrols'
 import * as THREE from 'three'
+import OrbitControls from 'three-orbitcontrols'
 import _ from 'lodash'
 import { Camera } from 'three';
 import { brightness } from 'scherz';

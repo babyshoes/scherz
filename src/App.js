@@ -72,14 +72,9 @@ class App extends Component {
       const {tensions, chords, scales, tonic} = this.state
 
       this.setNewChord(newChord, timestep)
-      // this.spiralWorker.postMessage(chords)
-      // convert below into callback for above
       if (timestep < tensions.length - 1) { 
         this.generateAndSet(timestep+1)
       }
-      // } else {
-      //   this.spiralWorker.postMessage(chords)
-      // }
   }  
     this.typesWorker = new typesWorker()
     this.typesWorker.onmessage = (evt) => {
@@ -106,10 +101,6 @@ class App extends Component {
       })
     }
 
-    this.progressionW = new progressionWorker()
-    this.progressionW.onmessage = (evt) => {
-      console.log(evt.data)
-    }
     this.synth = new Tone.PolySynth(4, Tone.Synth).toMaster()
   }
 
@@ -161,17 +152,11 @@ class App extends Component {
     
   }
 
-  // restartWorker = () => {
-  //   this.chordWorker.terminate()
-  //   this.chordWorker = new chordWorker()
-  // }
-
   onCurveChange = (newTension, timestep) => {
       const {tensions, chords, scales, tonic, tonicType} = this.state
       const newTensions = this.changeElementAtIndex(tensions, newTension, timestep)
       this.setState(() => ({tensions: newTensions}))  
       this.generateAndSet(timestep)
-      this.progressionW.postMessage({tensions, scales, tonic, tonicType})
   }
   
   onScaleSelect = (scale) => {

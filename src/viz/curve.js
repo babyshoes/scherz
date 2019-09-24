@@ -30,10 +30,7 @@ export const drawCurve = (play, ref, xScale, tensions, onCurveChange, active, on
         
     const color = d3.scaleOrdinal()
         .domain(groups)
-        // .range(['black', 'black', 'black'])
-        // .range(['#41b3a3', '#c38d9e', '#e8a87c', '#85dcb', '#e27d60'])
         .range(['#3da4ab', '#f6cd61', '#fe8a71'])
-        // .range(['#e41a1c','#377eb8','#4daf4a','#984ea3','#ff7f00','#ffff33','#a65628','#f781bf'])
 
     const svg = makeSVG(ref, layout)
 
@@ -50,7 +47,6 @@ export const drawCurve = (play, ref, xScale, tensions, onCurveChange, active, on
         .attr("y", 75)
         .attr("font-family", "sans-serif")
         .attr("font-size", "20px")
-        // .style("transform", "translate(-100, 0)")
 
     const addPoint = () => {
         if(!play) {
@@ -71,13 +67,7 @@ export const drawCurve = (play, ref, xScale, tensions, onCurveChange, active, on
         .attr("y", yScale(0))
         .attr("font-size", 30)
         .attr("font-family", "FontAwesome")
-        .on("click", addPoint)  
-    // draw axis
-    // const axis = d3.axisLeft()
-    //              .scale(yScale)
-
-    // svg.append("g")
-    //    .call(axis)   
+        .on("click", addPoint)    
 
     function activate(d) {
         if(!play) {
@@ -97,8 +87,6 @@ export const drawCurve = (play, ref, xScale, tensions, onCurveChange, active, on
         legend.append("tspan")
             .attr("class", "label")
             .text(string) 
-            // .attr("font-size", "15px")
-            // .attr("font-weight", "bold")
 
         const dimension = stacked.find(l => l.key === d.key)
         const event = d3.event
@@ -125,7 +113,6 @@ export const drawCurve = (play, ref, xScale, tensions, onCurveChange, active, on
         legendDesc.append("tspan")
             .attr("class", "desc")
             .style("text-anchor", "end")
-            // .attr("x", "100%")
             .text(dimDesc)
     } 
 
@@ -206,17 +193,7 @@ export const drawCurve = (play, ref, xScale, tensions, onCurveChange, active, on
         const timestep = d.xPos
         if(timestep > 0) { onCurveChange(data[timestep], timestep) }
     }
-        
-    // const drag = (index) => {
-    //     debugger
-    //     if (index != 0) {
-    //         console.log('should be draggable!')
-    //         return d3.drag()
-    //         .on('start', dragStart)
-    //         .on('drag', dragging)
-    //         .on('end', dragEnd)
-    //     }  
-    // }
+
     const drag = d3.drag()
         .on('start', dragStart)
         .on('drag', dragging)

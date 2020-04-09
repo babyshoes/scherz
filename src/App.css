@@ -17,56 +17,156 @@ body {
   text-align: center;
   overflow: hidden;
   display: grid;
-  grid-template-columns: 1.5fr 9fr 3fr; 
-  /* grid-template-rows: repeat(2, auto); */
-  grid-template-rows:  auto fit-content(10px);
+  grid-template-columns: 1fr 5fr 1.5fr 0.25fr; 
+  grid-template-rows: 0.1fr 1.5fr 1fr 0.1fr;
+  grid-template-areas:
+    ". . . ."
+    "header curve spiral ."
+    "header staff spiral ."
+    ". . . .";
   background-color: var(--main-color);
   color: white;
-  height: 100%;
-  width: 100%;
-}
-
-.App-logo {
-  animation: App-logo-spin infinite 20s linear;
-  height: 40vmin;
-  pointer-events: none;
-}
-
-.App-header {
-  background-color: #282c34;
+  height: 100vh;
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
-}
-
-.App-link {
-  color: #61dafb;
-}
-
-.footer {
- /* grid-area: 3/1/4/4; */
- border-top: 0.5px groove white;
-}
-
-canvas {
-  background: var(--main-color);
   width: 100%;
-  height: 100%;
-  cursor: grab;
 }
 
-line {
-  stroke: white;
+text, tspan {
+  fill: white;
 }
 
 circle {
   stroke: white;
-  fill: black;
-  border: 5px;
+}
+
+rect.cover {
+  opacity: 0.5;
+  width: 100%;
+  height: 100%;
+  fill: var(--main-color);
+}
+
+.staff {
+  grid-area: staff;
+  width: 100%;
+  height: 100%;
+}
+
+rect.chord:hover {
+  opacity: 0.25;
+}
+
+.curve {
+  grid-area: curve;
+  width: 100%;
+  height: 100%;
+}
+
+.curve path {
+  stroke: white;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+circle.node {
+  cursor: pointer;
+}
+
+circle.node.disabled {
+  cursor: not-allowed;
+  fill: white;
+  opacity: 0.25;
+}
+
+rect.layer {
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+}
+
+.spiral {
+  grid-area: spiral;
+  position: relative;
+}
+
+.pitch {
+  font-size: 1vw;
+}
+
+.header {
+  grid-area: header;
+}
+
+.transition-opacity {
+  transition: opacity 0.25s ease-in-out
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translate(0, -50px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(0, 0);
+  }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translate(0, 50px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(0, 0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.25s;
+}
+
+.fade-in.up {
+  animation: fadeInUp 0.25s;
+}
+
+.fade-in.down {
+  animation: fadeInDown 0.25s;
+}
+
+@keyframes fadeInValue {
+  from {
+    fill-opacity: 0;
+  }
+  to {
+    fill-opacity: 1;
+  }
+}
+
+.fade-in-value {
+  animation: fadeInValue 0.25s;
+}
+
+.arrow {
+  cursor: pointer;
+  fill: white;
+}
+
+.arrow.disabled {
+  cursor: default;
+  opacity: 0.25;
+  pointer-events: none;
 }
 
 circle.color1 {
@@ -81,88 +181,34 @@ circle.color3 {
   fill: var(--accent-color3);
 }
 
-canvas {
-  transition: all 1s;
-}
-h2 {
-  font-weight: 200;
-  margin-bottom: 8%;
-}
-
-.annotate {
-  fill: white;
-  user-select: none;
-}
-
-.add-node {
-  fill: white;
-  cursor: pointer;
-  transition: all 0.5s;
-}
-
-.panel {
-  transition: all 1s;
-  align-items: center;
-}
-
-.left {
-  grid-area: 2/2/3/3; 
-  padding-right: 10px;
-}
-
-.right {
-  grid-area: 2/3/3/4; 
-}
 
 .options-right {
   transition: all 0.5s ease-in;
   overflow: hidden;
 }
 
-.invisible{
-  opacity: 0;
-  z-index: -1;
-}
 
 .scale-list {
   overflow-y: scroll;
-  /* padding-bottom: 20px; */
   height: 60%;
 }
 
-/* .footer {
-  height: 20%;
-  background-color: red;
-} */
 
-.header {
-  grid-area: 2/1/3/2; 
+.scherz {
   font-family: 'Bungee Outline';
   text-shadow: -2px 1px 3px #000;
-				  /* 1px 1px 2px #000,
-				  1px -1px 0 #000,
-				  -1px -1px 0 #000; */
   -webkit-text-stroke-width: 0.1px;
-  /* -webkit-text-stroke-width: 0.7px;
-  -webkit-text-stroke-color: black; */
-  /* font-weight: bold; */
-  font-size: 5vw;
-  padding-left: 15%;
-  padding-top: 50px;
-  display: inline;
+  font-size: 6vw;
 }
 
 .play {
   font-size: 6vw;
   cursor: pointer;
-}
-
-.hype {
   font-family: 'Bungee Shade';
   text-shadow: 0 0 0;
 }
 
-.hype:hover {
+.play:hover {
   font-family: 'Bungee Outline';
   text-shadow: -2px 1px 3px #000;
 }
@@ -172,88 +218,41 @@ h2 {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  animation: rainbow_animation 2s ease-in-out infinite;
+  animation: rainbowAnimation 2s ease-in-out infinite;
   background-size: 400% 100%;
 }
-
 
 .tooltiptext { 
   opacity: 0;
   position: fixed;
-  top: 10px;
-  left: 2%;
-  height: 70%;
-  z-index: 1;
-  transition: opacity 0.2s ease-in-out;
-  font-family: Sans-Serif;
-  font-weight: 100;
-  font-size: 1.9vw;
+  top: 4%;
+  left: 4%;
+  height: 42vw;
+  transition: opacity 0.25s ease-in-out;
+  font-size: 1.5vw;
   background-color: var(--main-color);
-  color: white;
   text-align: left;
-  text-shadow: 0 0 0;
-  width: 12%;
+  width: 10%;
+  padding-top: 2%;
+  line-height: 2vw;
+  font-weight: 250;
 }
 
-.rainbow-surf:hover .tooltiptext {
+.tooltiptext div {
+  margin-bottom: 20%;
+}
+
+.tooltiptext:hover {
   opacity: 1;
 }
 
-@keyframes rainbow_animation {
-  0%,100% {background-position: 0 0;}
-  50% {background-position: 100% 0;}
-}
-
-.label {
-  font-size: 25px;
-  font-weight:100;
-}
-
-.note-label {
-  font-size: 1.2vw;
-  font-weight: 100;
-  transition: opacity 0.5s;
-  user-select: none;
-  color: rgba(255, 255, 255, 0.2);
-}
-
-.active {
-  color: rgba(255, 255, 255, 1);
-  font-size: 1.5vw;
-  font-weight: 400;
-}
-
-.marker {
-  position: absolute;
-  top: -10px;
-  left: -5px;
-  z-index: 0;
-}
-
-.note {
-  position: absolute;
-  z-index: 1;
-  font-size: 1vw;
-}
-
-#options-div {
-  font-size: 1.5vw;
-  border-left: 0.5px groove white;
-  padding-top: 5%; 
-  height: 100%;
-  transition: all 1s;
-  
-}
-
-.shift-off {
-  transform: translate(150%);
-}
-
-.options {
-  border-radius: 0.4em;
-  font-size: 1.5vw;
-  width: 30%;
-  text-align: center;
+@keyframes rainbowAnimation {
+  0%, 100% {
+    background-position: 0 0;
+  }
+  50% {
+    background-position: 100% 0;
+  }
 }
 
 .error {
@@ -261,104 +260,8 @@ h2 {
   position: relative;
 }
 
-.error-text{
+.error-text {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-}
-
-input.checkbox {
-  display: block;
-  height: 53px;
-  margin: 0 0 -53px -9999px;
-  outline: none;
-}
-
-label {
-  display: block;
-  position: relative;
-  padding: 6% 20% 0px 0px;
-  text-align: right;
-  /* border-top: 1px dashed #fff; */
-  order: 4;
-  cursor: pointer;
-  animation: undone .5s;
-}
-
-label::before {
-  content: '\f10c'; /* circle outline */
-  display: block;
-  position: absolute;
-  top: 50%;
-  left: 85%;
-  font: 1em 'FontAwesome';
-}
-
-input.checked + label::before {
-  content: '\f058'; 
-  /* color: var(--accent-color3) */
-}
-
-input[type=text], textarea {
-  -webkit-transition: all 0.30s ease-in-out;
-  -moz-transition: all 0.30s ease-in-out;
-  -ms-transition: all 0.30s ease-in-out;
-  -o-transition: all 0.30s ease-in-out;
-  outline: none;
-  border: 1px solid #DDDDDD;
-}
- 
-input[type=text]:focus, textarea:focus {
-  border: 1px solid rgb(143, 143, 143);
-} 
-
-.dropdown {
-  height: 100%;
-  width: 40%;
-  font-size: 1.5vw;
-  border-radius: 0.5em;
-}
-
-select:focus {
-  box-shadow: inset 0 0 2px rgb(143, 143, 143);
-  outline: none;
-  border: 1px solid rgb(143, 143, 143);
-} 
-
-.dropdown select {
-  padding-left: 50%;
-  font-size: 1.5vw;
-  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
-  -webkit-appearance: button;
-  appearance: button;
-  outline: none;
-  box-shadow:none;
-border-color:transparent;
-  border: 1px solid #DDDDDD
-}
-
-.dropdown::after {
-  content: "\f13a";
-  font-family: FontAwesome;
-  text-align: center;
-  font-size: 1.5vw;
-  line-height: 1.5;
-  color: white;
-  color: rgba(255, 255, 255, 0.5);
-  background-color: rgba(255, 255, 255, 0.1);
-  pointer-events: none;
-}
-
-.box:hover::before {
-  color: rgba(255, 255, 255, 0.6);
-  background-color: rgba(255, 255, 255, 0.2);
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
 }

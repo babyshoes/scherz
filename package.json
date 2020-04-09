@@ -3,22 +3,24 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "d3": "^5.9.7",
+    "@tweenjs/tween.js": "^18.5.0",
+    "axios": "^0.19.2",
+    "d3": "^5.15.1",
     "d3-tip": "^0.9.1",
-    "lodash": "^4.17.13",
-    "react": "^16.8.6",
-    "react-dom": "^16.8.6",
+    "lodash": "^4.17.15",
+    "lodash.combinations": "^18.9.19",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
     "react-scripts": "3.0.1",
-    "scherz": "^0.1.6",
+    "react-three-fiber": "^4.0.27",
+    "scherz.util": "^0.9.2",
     "three": "^0.108.0",
-    "three-orbitcontrols": "^2.102.2",
-    "tone": "^13.4.9",
-    "worker-loader": "^2.0.0"
+    "three-orbitcontrols": "^2.110.3"
   },
   "scripts": {
-    "start": "react-app-rewired start",
-    "build": "react-app-rewired build",
-    "test": "react-app-rewired test --env=jsdom",
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
@@ -35,8 +37,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "devDependencies": {
-    "react-app-rewired": "^2.1.3"
   }
 }

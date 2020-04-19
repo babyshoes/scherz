@@ -40,6 +40,10 @@ export default function({ play, forces, onNodeMove, onNodeRelease, onAddForce, o
 
   const activeArea = useMemo(() => activeNode && activeNode.index, [activeNode]);
   
+  const toggleActiveKey = (key) => {
+    activeKey === key ? setActiveKey(null) : setActiveKey(key);
+  }
+
   const ref = useRef(null);
 
   const xBetweenNodes = (curveWidth / (forces.length-1));
@@ -136,13 +140,19 @@ export default function({ play, forces, onNodeMove, onNodeRelease, onAddForce, o
       <path
         key={`path${key}`}
         className="transition-opacity"
-        clipPath="url(#curve)"
+        clipPath="url(#bounding-box)"
         d={bezierPath([ start, ...points, end ])}
         fill={colors[key]}
         opacity={getOpacity(key)}
+        onClick={() => toggleActiveKey(key)}
       />
     )
   }
+
+  // for every key
+  // clip it against what's in front of it
+
+
 
   function renderArea(index) {
     const maxValue = _.max(_.values(forces[index]));
@@ -185,7 +195,7 @@ export default function({ play, forces, onNodeMove, onNodeRelease, onAddForce, o
           cursor="pointer" fontSize={headerFontSize}
           onPointerEnter={() => setHoveredKey(key)}
           onPointerLeave={() => setHoveredKey(null)}
-          onClick={() => setActiveKey(key)}
+          onClick={() => toggleActiveKey(key)}
         >
           <tspan>{key}</tspan>
           {value !== undefined &&
@@ -210,7 +220,7 @@ export default function({ play, forces, onNodeMove, onNodeRelease, onAddForce, o
       onPointerLeave={onSVGPointerLeave}
     >
       <defs>
-        <clipPath id="curve">
+        <clipPath id="bounding-box">
           <rect
             x={curveStart} y={marginY}
             width={curveWidth} height={plotHeight}
@@ -223,7 +233,7 @@ export default function({ play, forces, onNodeMove, onNodeRelease, onAddForce, o
       />
       { keys.map(renderHeading) }
       { keys.map(renderPath) }
-      { _.range(forces.length).map(renderArea) }
+      {/* { _.range(forces.length).map(renderArea) } */}
       { forces.map(renderNodes) }
       <g transform={`translate(${curveEnd + (curveMarginX/2)}, ${getY(0)})`}>
         {forces.length > 1 &&

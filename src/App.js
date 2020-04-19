@@ -5,7 +5,7 @@ import scherzClient from './util/scherz-client.js';
 import Header from './Header.js';
 import Curve from './curve/Curve.js';
 import Staff from './staff/Staff.js';
-import Options from './components/Options.js';
+import Options from './Options.js';
 import SpiralCanvas from './spiral/SpiralCanvas.js';
 import './App.css';
 
@@ -38,16 +38,17 @@ class App extends React.Component {
     return scherzClient.generateChords(scales, prevChord, force);
   };
 
-  generate = async (generateFrom) => {
-    const { forces, chordGroups, beat } = this.state;
+  generate = async (generateFrom, setBeat=false) => {
+    const { forces, chordGroups } = this.state;
     const generatedChords = await this.generateChords(generateFrom);
     const newChordGroup = { chords: generatedChords, chordIndex: 0 };
     const selectedChordHasChanged = !_.isEqual(generatedChords[0], this.selectedChords[generateFrom]);
     const isNotLastChord = generateFrom < forces.length - 1;
+    const newChordGroups = set(generateFrom, newChordGroup, chordGroups)
     this.setState(
-      { chordGroups: set(generateFrom, newChordGroup, chordGroups) },
+      { chordGroups: newChordGroups, ...(setBeat && {beat: generateFrom}) },
       () => {
-        generateFrom === beat && this.playSelectedChord();
+        setBeat && this.playSelectedChord();
         selectedChordHasChanged && isNotLastChord && this.generate(generateFrom+1);
       }
     )
@@ -70,24 +71,19 @@ class App extends React.Component {
     this.audioCtx = new AudioContext();
   }
 
-  onNodeMove = (index, key, value) => this.setState(
-    { forces: set([index, key], value, this.state.forces) }
+  setForce = (beat, key, value) => this.setState(
+    { forces: set([beat, key], value, this.state.forces) }
   );
 
-  onNodeRelease = (index) => this.setState(
-    { beat: index },
-    () => this.generate(index)
-  );
-
-  onAddForce = () => {
+  addForce = () => {
     const { forces } = this.state;
     this.setState(
-      { forces: [ ...forces, emptyForce ], beat: forces.length },
-      () => this.generate(forces.length),
+      { forces: [ ...forces, emptyForce ] },
+      () => this.generate(forces.length, true),
     )
   }
 
-  onRemoveForce = () => this.setState({
+  removeForce = () => this.setState({
     forces: _.dropRight(this.state.forces, 1),
     chordGroups: _.dropRight(this.state.chordGroups, 1),
   })
@@ -103,22 +99,19 @@ class App extends React.Component {
 
   onTonicChange = (tonic) => this.setState({ tonic }, this.initialize);
 
-  onArrowClick = groupIndex => chordIndex => () => {
+  cycleChord = (beat) => (chordIndex) => () => {
     const { chordGroups, forces } = this.state;
-    const newChordGroups = set([groupIndex, 'chordIndex'], chordIndex, chordGroups)
+    const newChordGroups = set([beat, 'chordIndex'], chordIndex, chordGroups)
     this.setState(
-      { chordGroups: newChordGroups, beat: groupIndex },
+      { chordGroups: newChordGroups, beat },
       () => {
         this.playSelectedChord();
-        (groupIndex < forces.length - 1) && this.generate(groupIndex+1);
+        (beat < forces.length - 1) && this.generate(beat+1);
       }
     )
   };
 
-  onAreaClick = (index) => () => this.setState(
-    { beat: index },
-    this.playSelectedChord,
-  )
+  setBeat = (beat) => () => this.setState({ beat }, this.playSelectedChord);
 
   midiToHz = (midi) => Math.pow(2, (midi-69)/12) * 440;
 
@@ -150,25 +143,28 @@ class App extends React.Component {
     }, 1000);
   }
 
-  onPressPlay = () => this.setState({ play: true }, this.playOn);
-  onPressPause = () => this.setState({ play: false });
+  play = () => this.setState({ play: true }, this.playOn);
+  pause = () => this.setState({ play: false });
 
   render() {
-    const { forces, chordGroups, play, beat } = this.state;
+    const { scales, play, beat, forces, chordGroups } = this.state;
     return (
       <div className="App">
         <Header
           play={play}
-          onPressPlay={this.onPressPlay}
-          onPressPause={this.onPressPause}
+          onPressPlay={this.play}
+          onPressPause={this.pause}
+        />
+        <Options
+          selectedScales={scales}
         />
         <Curve
           play={play}
           forces={forces}
-          onNodeMove={this.onNodeMove}
-          onNodeRelease={this.onNodeRelease}
-          onAddForce={this.onAddForce}
-          onRemoveForce={this.onRemoveForce}
+          onNodeMove={this.setForce}
+          onNodeRelease={(beat) => this.generate(beat, true)}
+          onAddForce={this.addForce}
+          onRemoveForce={this.removeForce}
         />
         <Staff
           play={play}
@@ -176,8 +172,8 @@ class App extends React.Component {
           colors={colors}
           chordGroups={chordGroups}
           forceCount={forces.length}
-          onArrowClick={this.onArrowClick}
-          onAreaClick={this.onAreaClick}
+          onArrowClick={this.cycleChord}
+          onAreaClick={this.setBeat}
         />
           { this.selectedChord &&
             <SpiralCanvas

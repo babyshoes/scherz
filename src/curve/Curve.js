@@ -95,7 +95,7 @@ export default function({ play, forces, onNodeMove, onNodeRelease, onAddForce, o
       !disabled && setHoveredKey(key);
     }
 
-    function onPointerLeave() {
+    function reset() {
       setHoveredArea(null);
       setHoveredKey(null)
     }
@@ -107,7 +107,7 @@ export default function({ play, forces, onNodeMove, onNodeRelease, onAddForce, o
         cy={getY(value)} r={6}
         opacity={getOpacity(key)}
         onPointerEnter={onPointerEnter}
-        onPointerLeave={onPointerLeave}
+        onPointerLeave={reset}
         onPointerDown={() => !disabled && setActiveNode({ index, key })}
         onPointerUp={() => !disabled && setActiveKey(key)}
       />
@@ -149,25 +149,37 @@ export default function({ play, forces, onNodeMove, onNodeRelease, onAddForce, o
     )
   }
 
-  // for every key
-  // clip it against what's in front of it
-
-
-
-  function renderArea(index) {
-    const maxValue = _.max(_.values(forces[index]));
+  function renderHoverArea(beat) {
+    const force = forces[beat];
+    const maxValue = _.max(_.values(force));
     const maxY = getY(maxValue);
+
+    function toggleUnderlyingKey(e) {
+      const { y } = getMousePosition(e);
+      const value = getValue(y);
+      for (let i=keys.length-1; i>=0; i--) {
+        const key = keys[i];
+        const formerKey = keys[i+1];
+        const maxVal = force[key];
+        const minVal = i === keys.length-1 ? 0 : force[formerKey];
+        if (value > minVal && value < maxVal) {
+          toggleActiveKey(key);
+          return;
+        }
+      }
+    }
 
     return (
       <rect
-        key={`area${index}`}
+        key={`area${beat}`}
         opacity="0"
         width={xBetweenNodes / 2}
         height={getY(0) - maxY}
-        x={getX(index) - (xBetweenNodes / 4)}
+        x={getX(beat) - (xBetweenNodes / 4)}
         y={maxY}
-        onPointerEnter={() => setHoveredArea(index)}
+        onPointerEnter={() => setHoveredArea(beat)}
         onPointerLeave={() => setHoveredArea(null)}
+        onClick={toggleUnderlyingKey}
       />
     )
   }
@@ -233,7 +245,7 @@ export default function({ play, forces, onNodeMove, onNodeRelease, onAddForce, o
       />
       { keys.map(renderHeading) }
       { keys.map(renderPath) }
-      {/* { _.range(forces.length).map(renderArea) } */}
+      { _.range(forces.length).map(renderHoverArea) }
       { forces.map(renderNodes) }
       <g transform={`translate(${curveEnd + (curveMarginX/2)}, ${getY(0)})`}>
         {forces.length > 1 &&

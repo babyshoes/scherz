@@ -2,7 +2,7 @@ export const width = 1200;
 export const height = 400;
 
 export const marginX = width / 25;
-export const marginY = height / 20;
+export const marginY = height / 25;
 
 export const headerHeight = height / 20;
 export const headerFontSize = height * (3/5);

@@ -1,7 +1,7 @@
 export const width = 1200;
 export const height = 600;
 export const marginX = width / 25;
-export const marginY = height / 20;
+export const marginY = height / 25;
 
 export const plotWidth = (width - (marginX * 2))
 export const plotHeight = (height - (marginY * 2))

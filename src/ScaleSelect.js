@@ -5,7 +5,7 @@ import Multiselect from './Multiselect.js';
 
 
 export default ({ selectedScales, selectScale, removeScale }) =>
-  <div className="scales">
+  <div className="heading scales">
     <div style={{display: 'flex'}}>
       scales
       <Multiselect

@@ -1,11 +1,9 @@
 import React, { useState, useRef, useMemo } from 'react';
 import _ from 'lodash';
 import {
-  width, height, marginX, marginY,
-  plotWidth, plotHeight,
+  width, height, marginY,
+  plotHeight, getY, getValue,
   curveStart, curveEnd, curveWidth, curveMarginX,
-  headerSpacing, headerFontSize,
-  getY, getValue,
 } from './layout.js';
 import bezierPath from './cubic-bezier.js';
 
@@ -197,63 +195,66 @@ export default function({ isPlaying, forces, onNodeMove, onNodeRelease, onAddFor
     }
 
     return (
-      <g
+      <div
         key={`heading${key}`}
-        className="transition-opacity"
-        opacity={getOpacity(key)}
-        transform={`translate(${marginX}, ${marginY + index*headerSpacing})`}
+        className="heading transition-opacity"
+        style={{opacity: getOpacity(key)}}
       >
-        <text
-          cursor="pointer" fontSize={headerFontSize}
+        <div
+          style={{cursor: 'pointer'}}
           onPointerEnter={() => setHoveredKey(key)}
           onPointerLeave={() => setHoveredKey(null)}
           onClick={() => toggleActiveKey(key)}
         >
-          <tspan>{key}</tspan>
+          <span>{key}</span>
           {value !== undefined &&
-            <tspan className="fade-in value">: {value}</tspan>
+            <span className="fade-in">: {value}</span>
           }          
-        </text>
-        <text x={plotWidth} fontSize={headerFontSize} textAnchor="end">
+        </div>
+        <div>
           {blurbs[key]}
-        </text>
-      </g>
+        </div>
+      </div>
     )
   }
 
   return (
-    <svg
-      className={`curve transition-opacity ${isPlaying && 'transparent'}`}
-      ref={ref}
-      viewBox={`0 0 ${width} ${height}`}
-      onPointerMove={onSVGPointerMove}
-      onPointerUp={onSVGPointerUp}
-      onPointerLeave={onSVGPointerLeave}
-    >
-      <defs>
-        <clipPath id="bounding-box">
-          <rect
-            x={curveStart} y={marginY}
-            width={curveWidth} height={plotHeight}
-          />
-        </clipPath>
-      </defs>
-      <rect
-        className="layer"
-        onClick={() => setActiveKey(null)}
-      />
-      { keys.map(renderHeading) }
-      { keys.map(renderPath) }
-      { _.range(forces.length).map(renderHoverArea) }
-      { forces.map(renderNodes) }
-      <g transform={`translate(${curveEnd + (curveMarginX/2)}, ${getY(0)})`}>
-        {forces.length > 1 &&
-          <text { ...textProps } y={-width / 40} onClick={onRemoveForce}> - </text>
-        }
-        {forces.length < 10 &&
-          <text { ...textProps } onClick={onAddForce}> + </text>
-        }
-      </g>
-    </svg>
+    <>
+      <div className="forces">
+        { keys.map(renderHeading) }
+      </div>
+      <svg
+        className={`curve transition-opacity ${isPlaying && 'transparent'}`}
+        ref={ref}
+        viewBox={`0 0 ${width} ${height}`}
+        onPointerMove={onSVGPointerMove}
+        onPointerUp={onSVGPointerUp}
+        onPointerLeave={onSVGPointerLeave}
+      >
+        <defs>
+          <clipPath id="bounding-box">
+            <rect
+              x={curveStart} y={marginY}
+              width={curveWidth} height={plotHeight}
+            />
+          </clipPath>
+        </defs>
+        <rect
+          className="layer"
+          onClick={() => setActiveKey(null)}
+        />
+        { keys.map(renderPath) }
+        { _.range(forces.length).map(renderHoverArea) }
+        { forces.map(renderNodes) }
+        <g transform={`translate(${curveEnd + (curveMarginX/2)}, ${getY(0)})`}>
+          {forces.length > 1 &&
+            <text { ...textProps } y={-width / 40} onClick={onRemoveForce}> - </text>
+          }
+          {forces.length < 10 &&
+            <text { ...textProps } onClick={onAddForce}> + </text>
+          }
+        </g>
+      </svg>
+    </>
   )
 }

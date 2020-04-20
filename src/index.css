@@ -32,10 +32,11 @@ body {
   overflow: hidden;
   display: grid;
   grid-template-columns: 1fr 5fr 1.5fr 0.25fr; 
-  grid-template-rows: 0.1fr 0.05fr 1.5fr 1fr 0.1fr;
+  grid-template-rows: 0.1fr 0.05fr 0.15fr 1.5fr 1fr 0.1fr;
   grid-template-areas:
     ". . . ."
     "header scales spiral ."
+    "header forces spiral ."
     "header curve spiral ."
     "header staff spiral ."
     ". . . .";
@@ -74,6 +75,10 @@ rect.chord {
 
 rect.chord:hover, rect.chord.on-beat {
   opacity: 0.25;
+}
+
+.forces {
+  grid-area: forces;
 }
 
 .curve {
@@ -116,12 +121,15 @@ rect.layer {
   text-align: center;
 }
 
-.scales {
-  grid-area: scales;
+.heading {
   display: flex;
   margin-left: 3.6vw;
   margin-right: 3.6vw;
   justify-content: space-between;
+}
+
+.scales {
+  grid-area: scales;
 }
 
 .multiselect {
@@ -135,6 +143,7 @@ rect.layer {
   width: 12vw;
   padding-left: 1.5vw;
   background-color: rgba(87,78,92, 0.75);
+  z-index: 1;
 }
 
 .multiselect .options .option {
@@ -158,6 +167,7 @@ rect.layer {
   cursor: pointer;
   margin-right: 0.5vw;
   transition: transform 0.1s;
+  z-index: 2;
 }
 
 .dropdown.open {
@@ -207,19 +217,6 @@ rect.layer {
   animation: fadeInDown 0.25s;
 }
 
-@keyframes fadeInValue {
-  from {
-    fill-opacity: 0;
-  }
-  to {
-    fill-opacity: 1;
-  }
-}
-
-.fade-in.value {
-  animation: fadeInValue 0.25s;
-}
-
 @keyframes fadeInScale {
   from {
     opacity: 0;
@@ -245,30 +242,6 @@ rect.layer {
   cursor: default;
   opacity: 0.25;
   pointer-events: none;
-}
-
-circle.color1 {
-  fill: var(--accent-color1);
-}
-
-circle.color2 {
-  fill: var(--accent-color2);
-}
-
-circle.color3 {
-  fill: var(--accent-color3);
-}
-
-
-.options-right {
-  transition: all 0.5s ease-in;
-  overflow: hidden;
-}
-
-
-.scale-list {
-  overflow-y: scroll;
-  height: 60%;
 }
 
 .scherz {

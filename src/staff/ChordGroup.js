@@ -5,7 +5,7 @@ import { marginY, headerHeight, arrowHeight, arrowWidth } from './layout.js';
 import usePrevious from '../util/usePrevious';
 
 
-const ChordGroup = ({ chordGroup, onArrowClick }) => {
+const ChordGroup = ({ chordGroup, onUpArrowClick, onDownArrowClick }) => {
 
   const arrow = useMemo(() => {
     const arrowPath =  `
@@ -14,7 +14,17 @@ const ChordGroup = ({ chordGroup, onArrowClick }) => {
       L ${arrowWidth / 2} ${arrowHeight}
       z
     `
-    return <path d={arrowPath} fill="white" />
+    return (
+      <g>
+        <rect
+          transform={`translate(-${arrowWidth}, -${arrowHeight})`}
+          opacity={0}
+          width={arrowWidth*2}
+          height={arrowHeight*2}
+        />
+        <path d={arrowPath} fill="white" />
+      </g>
+    )
   }, [])
 
   const { chords, chordIndex } = chordGroup;
@@ -26,25 +36,26 @@ const ChordGroup = ({ chordGroup, onArrowClick }) => {
   if (!_.isNumber(previousChordIndex) || chordIndex - previousChordIndex === 0) {
     transition = null;
   } else if (chordIndex - previousChordIndex > 0) {
-    transition = 'down';
-  } else {
     transition = 'up';
+  } else {
+    transition = 'down';
   }
 
+  const arrowsAreDisabled = chords.length === 1;
   return (
     <g>
       <g transform={`translate(0, ${marginY})`}>
         <g transform={`translate(-${arrowWidth}, 0)`}>
           <g
-            className={`arrow ${(chordIndex === 0) && 'disabled'}`}
-            onClick={onArrowClick(chordIndex-1)}
+            className={`arrow ${arrowsAreDisabled && 'disabled'}`}
+            onClick={onUpArrowClick}
           >
             { arrow }
           </g>
           <g
-            className={`arrow ${(chordIndex === chords.length-1) && 'disabled'}`}
+            className={`arrow ${arrowsAreDisabled && 'disabled'}`}
             transform={`translate(0, ${headerHeight}) rotate(180)`}
-            onClick={onArrowClick(chordIndex+1)}
+            onClick={onDownArrowClick}
           >
             { arrow }
           </g>

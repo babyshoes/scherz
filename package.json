@@ -5,8 +5,6 @@
   "dependencies": {
     "@tweenjs/tween.js": "^18.5.0",
     "axios": "^0.19.2",
-    "d3": "^5.15.1",
-    "d3-tip": "^0.9.1",
     "lodash": "^4.17.15",
     "lodash.combinations": "^18.9.19",
     "react": "^16.13.1",
@@ -14,8 +12,7 @@
     "react-scripts": "3.0.1",
     "react-three-fiber": "^4.1.1",
     "scherz.util": "^0.9.5",
-    "three": "^0.108.0",
-    "three-orbitcontrols": "^2.110.3"
+    "three": "^0.108.0"
   },
   "scripts": {
     "start": "react-scripts start",

@@ -8,7 +8,10 @@ import {
 } from './layout.js';
 
 
-export default function({ isPlaying, beat, colors, chordGroups, forceCount, onArrowClick, onAreaClick }) {
+export default function({
+  isPlaying, beat, colors, chordGroups, forceCount,
+  onUpArrowClick, onDownArrowClick, onAreaClick
+}) {
 
   function renderLine(index) {
     const y = marginY + headerHeight + (lineSpacing * (index+2));
@@ -29,7 +32,8 @@ export default function({ isPlaying, beat, colors, chordGroups, forceCount, onAr
       <g key={`chordGroup${groupIndex}`} transform={`translate(${x}, 0)`}>
         <ChordGroup
           chordGroup={chordGroup}
-          onArrowClick={onArrowClick(groupIndex)}
+          onUpArrowClick={() => onUpArrowClick(groupIndex)}
+          onDownArrowClick={() => onDownArrowClick(groupIndex)}
         />
         <rect
           className={`chord transition-opacity ${groupIndex === beat && 'on-beat'}`}

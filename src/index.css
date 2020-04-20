@@ -13,10 +13,6 @@ code {
 }
 
 :root {
-  /* --main-color: #4a4e4d; */
-  /* --main-color: #595e5d; */
-  /* --main-color: #737977; */
-  /* --main-color: #525554; */
   --main-color: #574e5c;
   --accent-color1: #3da4ab;
   --accent-color2: #f6cd61;
@@ -130,6 +126,12 @@ rect.layer {
 
 .scales {
   grid-area: scales;
+  margin-bottom: 0.25vw;
+  padding-bottom: 0.25vw;
+}
+
+.heading.scales {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.5);
 }
 
 .multiselect {

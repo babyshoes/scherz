@@ -69,6 +69,39 @@ class App extends React.Component {
   componentDidMount() {
     this.initialize();
     this.audioCtx = new AudioContext();
+    document.addEventListener("keyup", e => {
+      if (e.code === 'Space') {
+        this.onPressSpace();
+      } else if (e.keyCode === 37) {
+        this.onPressLeft();
+      } else if (e.keyCode === 39) {
+        this.onPressRight();
+      } else if (e.keyCode === 38) {
+        this.onPressUp();
+      } else if (e.keyCode === 40) {
+        this.onPressDown();
+      }
+    });
+  }
+
+  onPressSpace = () => this.state.isPlaying ? this.pause() : this.play();
+  onPressUp = () => this.cycleChordUp(this.state.beat);
+  onPressDown = () => this.cycleChordDown(this.state.beat);
+
+  onPressLeft = () => {
+    const { beat, forces } = this.state;
+    this.setState(
+      { beat: (beat-1 + forces.length) % forces.length },
+      this.playSelectedChord,
+    )
+  }
+
+  onPressRight = () => {
+    const { beat, forces } = this.state;
+    this.setState(
+      { beat: (beat+1) % forces.length },
+      this.playSelectedChord,
+    )  
   }
 
   midiToHz = (midi) => Math.pow(2, (midi-69)/12) * 440;
@@ -140,7 +173,7 @@ class App extends React.Component {
 
   onTonicChange = (tonic) => this.setState({ tonic }, this.initialize);
 
-  cycleChord = (beat) => (chordIndex) => () => {
+  cycleChord = (beat, chordIndex) => {
     const { chordGroups, forces } = this.state;
     const newChordGroups = set([beat, 'chordIndex'], chordIndex, chordGroups)
     this.setState(
@@ -152,6 +185,18 @@ class App extends React.Component {
     )
   };
 
+  cycleChordUp = (beat) => {
+    const { chordGroups } = this.state;
+    const { chords, chordIndex } = chordGroups[beat];
+    this.cycleChord(beat, (chordIndex+1) % chords.length);
+  }
+
+  cycleChordDown = (beat) => {
+    const { chordGroups } = this.state;
+    const { chords, chordIndex } = chordGroups[beat];
+    this.cycleChord(beat, (chordIndex-1 + chords.length) % chords.length);
+  }
+
   setBeat = (beat) => () => this.setState({ beat }, this.playSelectedChord);
 
   playSelectedChord = () => this.selectedChord.notes
@@ -162,7 +207,7 @@ class App extends React.Component {
     this.playSelectedChord();
     setTimeout(() => {
       this.setState(
-        { beat: beat < forces.length-1 ? beat+1 : 0 },
+        { beat: (beat+1) % forces.length },
         () => isPlaying && this.playOn(),
       )
     }, 1000);
@@ -199,7 +244,8 @@ class App extends React.Component {
           colors={colors}
           chordGroups={chordGroups}
           forceCount={forces.length}
-          onArrowClick={this.cycleChord}
+          onDownArrowClick={this.cycleChordDown}
+          onUpArrowClick={this.cycleChordUp}
           onAreaClick={this.setBeat}
         />
           { this.selectedChord &&

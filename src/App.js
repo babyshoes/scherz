@@ -1,286 +1,218 @@
-import React, { Component } from 'react';
-import Header from './Header.js'
-import Left from './Left.js'
-import Options from './Options.js'
-import Spiral from './Spiral.js'
-import './App.css';
-import Tone from 'tone';
-import { generate, brightness } from 'scherz'
-import chordWorker from "./chord.worker.js"
-import typesWorker from "./types.worker.js"
-import spiralWorker from "./spiral.worker.js" 
-import _ from 'lodash'
+import React from 'react';
+import _ from 'lodash';
+import { set } from 'lodash/fp';
+import { scaleIntervals } from 'scherz.util';
+import scherzClient from './util/scherz-client.js';
+import Header from './Header.js';
+import Curve from './curve/Curve.js';
+import Staff from './staff/Staff.js';
+import ScaleSelect from './ScaleSelect.js';
+import SpiralCanvas from './spiral/SpiralCanvas.js';
 
-// TBR: random init
-const jsonData = "{\"chords\":[{\"notes\":[60,64,67,72],\"pitches\":[\"C\",\"E\",\"G\",\"C\"],\"type\":\"CM\"},{\"notes\":[64,69,69,72],\"pitches\":[\"E\",\"A\",\"A\",\"C\"],\"type\":\"Am\"},{\"notes\":[64,66,69,71],\"pitches\":[\"E\",\"F#\",\"A\",\"B\"],\"type\":\"B7sus4\"},{\"notes\":[62,66,68,71],\"pitches\":[\"D\",\"F#\",\"G#\",\"B\"],\"type\":\"G#m7-5\"},{\"notes\":[61,66,66,69],\"pitches\":[\"C#\",\"F#\",\"F#\",\"A\"],\"type\":\"F#m\"}],\"tensions\":[{\"color\":0,\"dissonance\":0,\"gravity\":0},{\"color\":0.4,\"dissonance\":0.5,\"gravity\":0},{\"color\":0,\"dissonance\":0.8,\"gravity\":0},{\"color\":0,\"dissonance\":0,\"gravity\":0}]}"
-const { chords: ogChords, tensions: ogTensions }  = JSON.parse(jsonData)
-const colorChoices = ['#3da4ab', '#f6cd61', '#fe8a71']
 
-class App extends Component {
+const initialForces = [{"color":0,"dissonance":0.1,"gravity":0}, {"color":0,"dissonance":0.2,"gravity":0}, {"color":0.4,"dissonance":0.4,"gravity":0.25}, {"color":0.2,"dissonance":0.8,"gravity":0}, {"color":0,"dissonance":0.5,"gravity":0.25}];
+const emptyForce = { color: 0, dissonance: 0, gravity: 0 };
+const colors = ['#3da4ab', '#f6cd61', '#fe8a71'];
 
+class App extends React.Component {
+  
   constructor(props) {
-    super(props)
-    const timestep = 0
-    // TBR: bundle play, timestep into dict
-    const play = false
-    const tensions = [ {color:0, dissonance:0, gravity:0}, ...ogTensions]
-    const scales = ['major']
-    const tonic = 'C'
-    const tonicError = null
-    const types = generate.possibleTypes(scales)
-    const tonicType = types[0]
-    // TBR: init as null and have worker take care of it
-    const chords = this.getInitialChords(scales, tonic, tonicType, tensions)
-    // TBR: does spiralRange need to be in state?
-    const spiralRange = this.getSpiralRange(chords)
-
+    super(props);
     this.state = {
-      chords, tensions, scales, types, tonic, tonicError, tonicType, timestep, play, spiralRange
-    }
+      scales: ['diatonic'],
+      tonic: 'C',
+      chordGroups: [],
+      forces: initialForces,
+      beat: 0,
+      isPlaying: false,
+    };
   }
 
-  getSpiralRange(chordList) {
-    const chordsByBrightness = _.orderBy(chordList, [function(chord) {return brightness.scaleBrightness(chord.tonic, chord.scale)}])
-    const darkest = _.first(chordsByBrightness),
-          brightest = _.last(chordsByBrightness)
+  generateChords = (generateFrom) => {
+    const { scales, tonic, forces } = this.state;
+    if (generateFrom === 0) {
+      return scherzClient.initialChords(scales, tonic, forces[0].dissonance)
+    }
+    const prevChord = this.selectedChords[generateFrom-1];
+    const force = forces[generateFrom];
+    return scherzClient.generateChords(scales, prevChord, force);
+  };
 
-    const darkestFifths = brightness.circleOfFifths(darkest.tonic, darkest.scale),
-          brightestFifths = brightness.circleOfFifths(brightest.tonic, brightest.scale)
-    
-    let circleOfFifths = brightness.fifthsBetween(_.first(darkestFifths), _.last(brightestFifths))
-    while (circleOfFifths.length < 36) {
-      if (circleOfFifths.length % 2) {
-        circleOfFifths = [...circleOfFifths, brightness.fifthsAbove(1, _.last(circleOfFifths))]
-        // circleOfFifths.push(brightness.fifthsAbove(1, _.last(circleOfFifths)))
-      } else {
-        circleOfFifths = [brightness.fifthsAbove(-1, _.first(circleOfFifths)), ...circleOfFifths]
+  generate = async (generateFrom, setBeat=false) => {
+    const { forces, chordGroups } = this.state;
+    const generatedChords = await this.generateChords(generateFrom);
+    const newChordGroup = { chords: generatedChords, chordIndex: 0 };
+    const selectedChordHasChanged = !_.isEqual(generatedChords[0], this.selectedChords[generateFrom]);
+    const isNotLastChord = generateFrom < forces.length - 1;
+    const newChordGroups = set(generateFrom, newChordGroup, chordGroups)
+    this.setState(
+      { chordGroups: newChordGroups, ...(setBeat && {beat: generateFrom}) },
+      () => {
+        setBeat && this.playSelectedChord();
+        selectedChordHasChanged && isNotLastChord && this.generate(generateFrom+1);
       }
-    }
-    return circleOfFifths
+    )
+  };
+
+  initialize = () => this.generate(0);
+
+  get selectedChords() {
+    return this.state.chordGroups.map(
+      ({ chords, chordIndex }) => chords[chordIndex]
+    );
   }
 
-  getInitialChords(scales, root, type, tensions) {
-    const first = generate.initialChord(scales, root, type)
-    const chords = tensions.slice(1).reduce((acc, tension) => {
-      const prevTimestep = acc.length - 1
-      return [...acc, generate.nextChord(scales, acc[prevTimestep], tension)]
-    }, [first])
-
-    return chords
+  get selectedChord() {
+    return this.selectedChords[this.state.beat];
   }
 
-  setUpChordWorker(){
-    this.chordWorker = new chordWorker()
-    this.chordWorker.onmessage = (evt) => {
-      const [newChord, timestep] = evt.data
-      const {tensions} = this.state
-
-      this.setNewChord(newChord, timestep)
-      if (timestep < tensions.length - 1) { 
-        this.generateAndSet(timestep+1)
-      }
-    }     
+  componentDidMount() {
+    this.initialize();
+    this.audioCtx = new AudioContext();
   }
 
-  // TBR: benchmark types calculations. ncessary in worker??
-  setUpTypesWorker(){
-    this.typesWorker = new typesWorker()
-    this.typesWorker.onmessage = (evt) => {
-      const possibleTypes = evt.data
-      if(!possibleTypes.includes(this.state.tonicType)) {
-        this.setState(() => ({
-          // ?? possibleTypes list not always in same order
-          tonicType: possibleTypes[0], 
-          types: possibleTypes
-          }), () => {this.generateAndSet(0)}
-        )
-      } else {
-        this.setState(() => ({types: possibleTypes}))
-      }
-    }  
+  midiToHz = (midi) => Math.pow(2, (midi-69)/12) * 440;
+
+  playNote = (note, duration, delay=0) => {
+    const hz = this.midiToHz(note);
+
+    const gainNode = this.audioCtx.createGain();
+    gainNode.gain.value = 0.15;
+
+    const oscillator = this.audioCtx.createOscillator();
+    oscillator.frequency.setValueAtTime(hz, this.audioCtx.currentTime)
+
+    oscillator.connect(gainNode);
+    gainNode.connect(this.audioCtx.destination);
+
+    oscillator.start(this.audioCtx.currentTime + delay);
+    oscillator.stop(this.audioCtx.currentTime + delay + duration);
   }
 
-  setUpSpiralWorker(){
-    this.spiralWorker = new spiralWorker()
-    this.spiralWorker.onmessage = (evt) => {
-      const range = evt.data
-      console.log(range)
-      this.setState(({spiralRange: prevRange}) => {
-        if (_.first(prevRange) !== _.first(range) && _.last(prevRange) !== _.last(range)) {
-          return {spiralRange: range}
-        }
-      })
-    }
-  }
+  setForce = (beat, key, value) => this.setState(
+    { forces: set([beat, key], value, this.state.forces) }
+  );
 
-  componentDidMount(){
-    this.setUpChordWorker()
-    this.setUpTypesWorker()
-    this.setUpSpiralWorker()
-
-    this.synth = new Tone.PolySynth(4, Tone.Synth).toMaster()
-  }
-
-
-  componentDidUpdate(prevProps, prevState) {
-    if ((prevState.tonic !== this.state.tonic || prevState.tonicType !== this.state.tonicType)) {
-      this.generateAndSet(0)
-    }
-
-    if (this.state.play) {
-        const {chords, timestep} = this.state
-        this.playChord(chords[timestep])
-
-        setTimeout(() => {
-            if (timestep < this.state.tensions.length-1) {
-              this.setState(() => ({timestep: timestep+1}))
-            } else {
-              this.setState(() => ({timestep: 0}))
-            }
-          }, 1000)
-    } 
-  }
-
-  playChord = (chord) => {
-    const chordNotes = chord.notes.map(note => Tone.Midi(note))
-    this.synth.triggerAttackRelease(chordNotes, '8n')
-  } 
-
-  changeElementAtIndex = (array, newElement, index) => {
-    return [...array.slice(0, index), newElement, ...array.slice(index+1)]
-  }
-
-  setNewChord = (newChord, timestep) => {
-    const prevChords = this.state.chords
-    const newChords = this.changeElementAtIndex(prevChords, newChord, timestep)
-    this.spiralWorker.postMessage(newChords)
-    this.setState(() => ({chords: newChords}))  
-  }
-  
-  generateAndSet = (timestepIndex) => {
-    const {chords, scales, tensions, tonic, tonicError, tonicType, types} = this.state
-    const prevChord = chords[timestepIndex - 1],
-          tension = tensions[timestepIndex]
-
-    if(!tonicError) {
-      this.chordWorker.postMessage({prevChord, tension, timestepIndex, tonic, tonicType, types, scales})   
-    }
-  }
-
-  onCurveChange = (newTension, timestep) => {
-      const {tensions, chords, scales, tonic, tonicType} = this.state
-      const newTensions = this.changeElementAtIndex(tensions, newTension, timestep)
-      this.setState(() => ({tensions: newTensions}))  
-      this.generateAndSet(timestep)
-  }
-  
-  onScaleSelect = (scale) => {
-    if (!this.state.scales.includes(scale)) {
-        this.setState(({scales: prevScales}) => {
-          return {scales: [...prevScales, scale]}
-        }, () => {
-          this.typesWorker.postMessage(this.state.scales)
-        })  
-    }
-  }
-
-  onScaleRemove = (scale) => {
-    if (this.state.scales.length > 1 && this.state.scales.includes(scale)) {
-        this.setState(({scales: prevScales}) => {
-          return {scales: prevScales.filter(s => s !== scale)}
-        }, () => {
-          this.typesWorker.postMessage(this.state.scales)
-        })
-    }
-  }
-
-  onTonicChange = (newTonic) => { 
-      const format = tonic => tonic ? tonic[0].toUpperCase() + tonic.slice(1) : ""
-      let error = null
-
-      if (newTonic.length == 0) {
-        error = "input a tonic"
-      } else {
-        const baseNote = newTonic[0].toLowerCase()
-        const accidental = new Set(newTonic.slice(1))
-        const invalidAccidental = [...accidental].filter(char => !new Set(["b", "#"]).has(char))
-
-        let errors = []
-        if (!"cdefgab".includes(baseNote)) { errors.push("tonic") }
-        if (accidental.size > 1 || invalidAccidental.length > 0) { errors.push("accidental") }
-        if (errors.length > 0) { error = "not valid " + errors.join(" or ") }
-      }
-
-      this.setState(() => {
-        return {
-          tonic: format(newTonic),
-          tonicError: error
-        }
-      })
-  }
-
-  onTypeChange = (newType) => {
-    this.setState( ({types: possibleTypes}) => {
-      if (possibleTypes.includes(newType)) {
-        return {tonicType: newType}
-      }}
+  addForce = () => {
+    const { forces } = this.state;
+    this.setState(
+      { forces: [ ...forces, emptyForce ] },
+      () => this.generate(forces.length, true),
     )
   }
- 
-  onPlayStatusChange = () => {
-      this.setState( ({play: prevPlay}) => {
-        return {
-            play: !prevPlay,
-            timestep: 0
-        }
-      })
+
+  removeForce = () => {
+    const { forces, chordGroups, beat } = this.state;
+    this.setState({
+      forces: _.dropRight(forces, 1),
+      chordGroups: _.dropRight(chordGroups, 1),
+      ...(beat === forces.length-1 && { beat: forces.length-2 })
+    })
   }
+
+  playScale = (scale) => scaleIntervals[scale]
+    .reduce(
+      (notes, interval) => [ ...notes, _.last(notes) + interval],
+      [60]
+    )
+    .forEach((note, i) => this.playNote(note, 0.18, i*0.18));
+
+  selectScale = (scale) => {
+    const { scales } = this.state;
+    if (scales.length < 2) {
+      this.playScale(scale);
+      this.setState(
+        { scales: [ ...this.state.scales, scale ] },
+        this.initialize,
+      );
+    }
+  }
+
+  removeScale = (scale) => {
+    const { scales } = this.state;
+    if (scales.length > 1) {
+      this.setState(
+        { scales: scales.filter(s => s !== scale) },
+        this.initialize,
+      );
+    }
+  }
+
+  onTonicChange = (tonic) => this.setState({ tonic }, this.initialize);
+
+  cycleChord = (beat) => (chordIndex) => () => {
+    const { chordGroups, forces } = this.state;
+    const newChordGroups = set([beat, 'chordIndex'], chordIndex, chordGroups)
+    this.setState(
+      { chordGroups: newChordGroups, beat },
+      () => {
+        this.playSelectedChord();
+        (beat < forces.length - 1) && this.generate(beat+1);
+      }
+    )
+  };
+
+  setBeat = (beat) => () => this.setState({ beat }, this.playSelectedChord);
+
+  playSelectedChord = () => this.selectedChord.notes
+    .forEach(note => this.playNote(note, 0.75));
+
+  playOn = () => {
+    const { beat, forces, isPlaying } = this.state;
+    this.playSelectedChord();
+    setTimeout(() => {
+      this.setState(
+        { beat: beat < forces.length-1 ? beat+1 : 0 },
+        () => isPlaying && this.playOn(),
+      )
+    }, 1000);
+  }
+
+  play = () => this.setState({ isPlaying: true }, this.playOn);
+  pause = () => this.setState({ isPlaying: false });
 
   render() {
-    const {chords, scales, types, tensions, tonic, tonicError, play, timestep, spiralRange} = this.state
-    const color = colorChoices[timestep % colorChoices.length]
+    const { scales, isPlaying, beat, forces, chordGroups } = this.state;
     return (
-        <div className="App">
-            <div className="header panel">
-                <Header 
-                  play={play} 
-                  onPlayStatusChange={this.onPlayStatusChange}
-                />
-            </div>
-            <div className="left panel">
-                <Left 
-                  play={play}
-                  timestep={timestep}
-                  color={color}
-                  chords={chords}
-                  tensions={tensions}
-                  onCurveChange={this.onCurveChange}
-                />
-            </div>
-            <div className="right panel">
-                <Spiral 
-                  chord={chords[timestep]} 
-                  spiralRange={spiralRange} 
-                  play={play} 
-                  color={color}
-                />
-            </div>
-            <div className="right options-right panel">
-                <Options
-                  selectedScales={scales}
-                  tonic={tonic}
-                  tonicError={tonicError}
-                  possibleTypes={types}
-                  onScaleSelect={this.onScaleSelect}
-                  onScaleRemove={this.onScaleRemove}
-                  onTonicChange={this.onTonicChange}
-                  onTypeChange={this.onTypeChange}
-                  play={play}
-                />  
-            </div>
-        </div>
+      <div className="App">
+        <Header
+          isPlaying={isPlaying}
+          onPressPlay={this.play}
+          onPressPause={this.pause}
+        />
+        <ScaleSelect
+          selectedScales={scales}
+          selectScale={this.selectScale}
+          removeScale={this.removeScale}
+        />
+        <Curve
+          isPlaying={isPlaying}
+          forces={forces}
+          onNodeMove={this.setForce}
+          onNodeRelease={(beat) => this.generate(beat, true)}
+          onAddForce={this.addForce}
+          onRemoveForce={this.removeForce}
+        />
+        <Staff
+          isPlaying={isPlaying}
+          beat={beat}
+          colors={colors}
+          chordGroups={chordGroups}
+          forceCount={forces.length}
+          onArrowClick={this.cycleChord}
+          onAreaClick={this.setBeat}
+        />
+          { this.selectedChord &&
+            <SpiralCanvas
+              isPlaying={isPlaying}
+              chord={this.selectedChord}
+              color={colors[beat % colors.length]}
+            />
+          }
+      </div>
     )
   }
+
 }
 
 export default App;

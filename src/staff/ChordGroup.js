@@ -3,7 +3,6 @@ import _ from 'lodash';
 import Chord from './Chord.js';
 import { marginY, headerHeight, arrowHeight, arrowWidth } from './layout.js';
 import usePrevious from '../util/usePrevious';
-import '../App.css';
 
 
 const ChordGroup = ({ chordGroup, onArrowClick }) => {

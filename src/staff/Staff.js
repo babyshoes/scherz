@@ -1,6 +1,5 @@
 import React from 'react';
 import _ from 'lodash';
-import '../App.css';
 import ChordGroup from './ChordGroup.js';
 import {
   width, height, marginX, marginY,
@@ -9,7 +8,7 @@ import {
 } from './layout.js';
 
 
-export default function({ play, beat, colors, chordGroups, forceCount, onArrowClick, onAreaClick }) {
+export default function({ isPlaying, beat, colors, chordGroups, forceCount, onArrowClick, onAreaClick }) {
 
   function renderLine(index) {
     const y = marginY + headerHeight + (lineSpacing * (index+2));
@@ -33,12 +32,11 @@ export default function({ play, beat, colors, chordGroups, forceCount, onArrowCl
           onArrowClick={onArrowClick(groupIndex)}
         />
         <rect
-          className="chord transition-opacity"
+          className={`chord transition-opacity ${groupIndex === beat && 'on-beat'}`}
           x={chordSpacing / -4}
           y={marginY + headerHeight + lineSpacing}
           width={chordSpacing / 2}
           height={lineSpacing*12}
-          opacity={groupIndex === beat ? 0.25 : 0}
           fill={colors[groupIndex % colors.length]}
           cursor="pointer"
           onClick={onAreaClick(groupIndex)}
@@ -49,12 +47,11 @@ export default function({ play, beat, colors, chordGroups, forceCount, onArrowCl
 
   return (
     <svg
-      className={`staff transition-opacity`}
+      className={`staff transition-opacity ${isPlaying && 'transparent'}`}
       viewBox={`0 0 ${width} ${height}`}
     >
       { _.range(11).map(renderLine) }
       { chordGroups.map(renderChordGroup) }
-      { play && <rect className="transition-opacity cover"/> }
     </svg>
   )
 }

@@ -1,13 +1,13 @@
 import React from 'react';
 import _ from 'lodash';
 import { set } from 'lodash/fp';
+import { scaleIntervals } from 'scherz.util';
 import scherzClient from './util/scherz-client.js';
 import Header from './Header.js';
 import Curve from './curve/Curve.js';
 import Staff from './staff/Staff.js';
-import Options from './Options.js';
+import ScaleSelect from './ScaleSelect.js';
 import SpiralCanvas from './spiral/SpiralCanvas.js';
-import './App.css';
 
 
 const initialForces = [{"color":0,"dissonance":0.1,"gravity":0}, {"color":0,"dissonance":0.2,"gravity":0}, {"color":0.4,"dissonance":0.4,"gravity":0.25}, {"color":0.2,"dissonance":0.8,"gravity":0}, {"color":0,"dissonance":0.5,"gravity":0.25}];
@@ -19,12 +19,12 @@ class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      scales: ['major'],
+      scales: ['diatonic'],
       tonic: 'C',
       chordGroups: [],
       forces: initialForces,
       beat: 0,
-      play: false,
+      isPlaying: false,
     };
   }
 
@@ -71,6 +71,24 @@ class App extends React.Component {
     this.audioCtx = new AudioContext();
   }
 
+  midiToHz = (midi) => Math.pow(2, (midi-69)/12) * 440;
+
+  playNote = (note, duration, delay=0) => {
+    const hz = this.midiToHz(note);
+
+    const gainNode = this.audioCtx.createGain();
+    gainNode.gain.value = 0.15;
+
+    const oscillator = this.audioCtx.createOscillator();
+    oscillator.frequency.setValueAtTime(hz, this.audioCtx.currentTime)
+
+    oscillator.connect(gainNode);
+    gainNode.connect(this.audioCtx.destination);
+
+    oscillator.start(this.audioCtx.currentTime + delay);
+    oscillator.stop(this.audioCtx.currentTime + delay + duration);
+  }
+
   setForce = (beat, key, value) => this.setState(
     { forces: set([beat, key], value, this.state.forces) }
   );
@@ -83,19 +101,42 @@ class App extends React.Component {
     )
   }
 
-  removeForce = () => this.setState({
-    forces: _.dropRight(this.state.forces, 1),
-    chordGroups: _.dropRight(this.state.chordGroups, 1),
-  })
+  removeForce = () => {
+    const { forces, chordGroups, beat } = this.state;
+    this.setState({
+      forces: _.dropRight(forces, 1),
+      chordGroups: _.dropRight(chordGroups, 1),
+      ...(beat === forces.length-1 && { beat: forces.length-2 })
+    })
+  }
 
-  onScaleSelect = (scale) => this.setState(
-    { scales: [ ...this.state.scales, scale ] },
-    this.initialize,
-  );
-  onScaleRemove = (scale) => this.setState(
-    ({ scales }) => ({ scales: scales.filter(s => s!== scale) }),
-    this.initialize,
-  );
+  playScale = (scale) => scaleIntervals[scale]
+    .reduce(
+      (notes, interval) => [ ...notes, _.last(notes) + interval],
+      [60]
+    )
+    .forEach((note, i) => this.playNote(note, 0.18, i*0.18));
+
+  selectScale = (scale) => {
+    const { scales } = this.state;
+    if (scales.length < 2) {
+      this.playScale(scale);
+      this.setState(
+        { scales: [ ...this.state.scales, scale ] },
+        this.initialize,
+      );
+    }
+  }
+
+  removeScale = (scale) => {
+    const { scales } = this.state;
+    if (scales.length > 1) {
+      this.setState(
+        { scales: scales.filter(s => s !== scale) },
+        this.initialize,
+      );
+    }
+  }
 
   onTonicChange = (tonic) => this.setState({ tonic }, this.initialize);
 
@@ -113,53 +154,39 @@ class App extends React.Component {
 
   setBeat = (beat) => () => this.setState({ beat }, this.playSelectedChord);
 
-  midiToHz = (midi) => Math.pow(2, (midi-69)/12) * 440;
-
-  playSelectedChord = () =>
-    this.selectedChord.notes.forEach(note => {
-      const hz = this.midiToHz(note);
-
-      const gainNode = this.audioCtx.createGain();
-      gainNode.gain.value = 0.15;
-
-      const oscillator = this.audioCtx.createOscillator();
-      oscillator.frequency.setValueAtTime(hz, this.audioCtx.currentTime)
-
-      oscillator.connect(gainNode);
-      gainNode.connect(this.audioCtx.destination);
-
-      oscillator.start();
-      oscillator.stop(this.audioCtx.currentTime + 0.75);
-    });
+  playSelectedChord = () => this.selectedChord.notes
+    .forEach(note => this.playNote(note, 0.75));
 
   playOn = () => {
-    const { beat, forces, play } = this.state;
+    const { beat, forces, isPlaying } = this.state;
     this.playSelectedChord();
     setTimeout(() => {
       this.setState(
         { beat: beat < forces.length-1 ? beat+1 : 0 },
-        () => play && this.playOn(),
+        () => isPlaying && this.playOn(),
       )
     }, 1000);
   }
 
-  play = () => this.setState({ play: true }, this.playOn);
-  pause = () => this.setState({ play: false });
+  play = () => this.setState({ isPlaying: true }, this.playOn);
+  pause = () => this.setState({ isPlaying: false });
 
   render() {
-    const { scales, play, beat, forces, chordGroups } = this.state;
+    const { scales, isPlaying, beat, forces, chordGroups } = this.state;
     return (
       <div className="App">
         <Header
-          play={play}
+          isPlaying={isPlaying}
           onPressPlay={this.play}
           onPressPause={this.pause}
         />
-        <Options
+        <ScaleSelect
           selectedScales={scales}
+          selectScale={this.selectScale}
+          removeScale={this.removeScale}
         />
         <Curve
-          play={play}
+          isPlaying={isPlaying}
           forces={forces}
           onNodeMove={this.setForce}
           onNodeRelease={(beat) => this.generate(beat, true)}
@@ -167,7 +194,7 @@ class App extends React.Component {
           onRemoveForce={this.removeForce}
         />
         <Staff
-          play={play}
+          isPlaying={isPlaying}
           beat={beat}
           colors={colors}
           chordGroups={chordGroups}
@@ -177,7 +204,7 @@ class App extends React.Component {
         />
           { this.selectedChord &&
             <SpiralCanvas
-              play={play}
+              isPlaying={isPlaying}
               chord={this.selectedChord}
               color={colors[beat % colors.length]}
             />

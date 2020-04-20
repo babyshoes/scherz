@@ -2,7 +2,6 @@ import React from 'react';
 import _ from 'lodash';
 import Circle from './Circle.js';
 import { marginY, height, footerHeight } from './layout.js';
-import '../App.css';
 
 
 const lowestNote = 40;

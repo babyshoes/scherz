@@ -105,7 +105,7 @@ export default function Spiral({ pitches, color }) {
     .filter(o => !(prevSpiral && prevSpiral.includes(o.pitch)))
     .map(o => {
       const targetOpacity = pitches.includes(o.pitch) ? 1 : 0.25;
-      return <PitchMarker { ...o } updateMaterial={tweenOpacity(0, targetOpacity, 250, 250)} />
+      return <PitchMarker { ...o } updateMaterial={tweenOpacity(0, targetOpacity, 100, 200)} />
     });
 
   const prevColor = usePrevious(color);
@@ -126,11 +126,11 @@ export default function Spiral({ pitches, color }) {
   return (
     <group>
       <group>
-        <SpiralLine points={points} updateMaterial={tweenOpacity(0, 1, 250, 250)}/>
+        <SpiralLine points={points} updateMaterial={tweenOpacity(0, 1, 100, 200)}/>
         { markers }
         <ChordShape
           vertices={chordVertices}
-          updateMaterial={tweenOpacity(0, 0.75, 250, 250)}
+          updateMaterial={tweenOpacity(0, 0.75, 100, 200)}
           color={color}
         />
       </group>

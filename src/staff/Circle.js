@@ -10,8 +10,8 @@ export default function({ pitch, space, offset }) {
   const x = offset ? offsetWidth : 0;
   const y = height - (marginY + footerHeight + ((space+2) * noteSpacing));
   const accidentals = pitch.slice(1)
-    .replace('#', '♯', 'g')
-    .replace('b', '♭', 'g')
+    .replace(/#/gi, '♯')
+    .replace(/b/gi, '♭')
 
   return (
     <g>

@@ -11,3 +11,334 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
 }
+
+:root {
+  /* --main-color: #4a4e4d; */
+  /* --main-color: #595e5d; */
+  /* --main-color: #737977; */
+  /* --main-color: #525554; */
+  --main-color: #574e5c;
+  --accent-color1: #3da4ab;
+  --accent-color2: #f6cd61;
+  --accent-color3: #fe8a71; 
+}
+
+body {
+  background-color: var(--main-color);
+  font-size: 1vw;
+}
+
+.App {
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 1fr 5fr 1.5fr 0.25fr; 
+  grid-template-rows: 0.1fr 0.05fr 1.5fr 1fr 0.1fr;
+  grid-template-areas:
+    ". . . ."
+    "header scales spiral ."
+    "header curve spiral ."
+    "header staff spiral ."
+    ". . . .";
+  background-color: var(--main-color);
+  color: white;
+  height: 100vh;
+  min-height: 100vh;
+  width: 100%;
+}
+
+text, tspan {
+  fill: white;
+}
+
+circle {
+  stroke: white;
+}
+
+.transition-opacity {
+  transition: opacity 0.25s ease-in-out;
+}
+
+.transparent {
+  opacity: 0.5;
+}
+
+.staff {
+  grid-area: staff;
+  width: 100%;
+  height: 100%;
+}
+
+rect.chord {
+  opacity: 0;
+}
+
+rect.chord:hover, rect.chord.on-beat {
+  opacity: 0.25;
+}
+
+.curve {
+  grid-area: curve;
+  width: 100%;
+  height: 100%;
+}
+
+.curve path {
+  stroke: white;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+circle.node {
+  cursor: pointer;
+}
+
+circle.node.disabled {
+  cursor: not-allowed;
+  fill: white;
+  opacity: 0.25;
+}
+
+rect.layer {
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+}
+
+.spiral {
+  grid-area: spiral;
+  position: relative;
+}
+
+.header {
+  grid-area: header;
+  justify-self: center;
+  text-align: center;
+}
+
+.scales {
+  grid-area: scales;
+  display: flex;
+  margin-left: 3.6vw;
+  margin-right: 3.6vw;
+  justify-content: space-between;
+}
+
+.multiselect {
+  position: relative;
+  display: flex;
+  margin-left: 0.25vw;
+}
+
+.multiselect .options {
+  position: absolute;
+  width: 12vw;
+  padding-left: 1.5vw;
+  background-color: rgba(87,78,92, 0.75);
+}
+
+.multiselect .options .option {
+  opacity: 0.5;
+  cursor: pointer;
+}
+
+.multiselect .options .option.disabled {
+  cursor: not-allowed;
+}
+
+.multiselect .options .option:hover:not(.disabled) {
+  opacity: 0.75;
+}
+
+.multiselect .options .option.selected {
+  opacity: 1 !important;
+}
+
+.dropdown {
+  cursor: pointer;
+  margin-right: 0.5vw;
+  transition: transform 0.1s;
+}
+
+.dropdown.open {
+  transform: rotate(-90deg) translateY(0.05vw);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translate(0, -2.5vw);
+  }
+  to {
+    opacity: 1;
+    transform: translate(0, 0);
+  }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translate(0, 2.5vw);
+  }
+  to {
+    opacity: 1;
+    transform: translate(0, 0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.25s;
+}
+
+.fade-in.up {
+  animation: fadeInUp 0.25s;
+}
+
+.fade-in.down {
+  animation: fadeInDown 0.25s;
+}
+
+@keyframes fadeInValue {
+  from {
+    fill-opacity: 0;
+  }
+  to {
+    fill-opacity: 1;
+  }
+}
+
+.fade-in.value {
+  animation: fadeInValue 0.25s;
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scaleY(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+}
+
+.fade-in.options {
+  animation: fadeInScale 0.25s;
+  transform-origin: top;
+}
+
+.arrow {
+  cursor: pointer;
+  fill: white;
+}
+
+.arrow.disabled {
+  cursor: default;
+  opacity: 0.25;
+  pointer-events: none;
+}
+
+circle.color1 {
+  fill: var(--accent-color1);
+}
+
+circle.color2 {
+  fill: var(--accent-color2);
+}
+
+circle.color3 {
+  fill: var(--accent-color3);
+}
+
+
+.options-right {
+  transition: all 0.5s ease-in;
+  overflow: hidden;
+}
+
+
+.scale-list {
+  overflow-y: scroll;
+  height: 60%;
+}
+
+.scherz {
+  font-family: 'Bungee Outline';
+  text-shadow: -2px 1px 3px #000;
+  -webkit-text-stroke-width: 0.1px;
+  font-size: 6vw;
+}
+
+.play {
+  font-size: 6vw;
+  cursor: pointer;
+  font-family: 'Bungee Shade';
+  text-shadow: 0 0 0;
+}
+
+.play:hover {
+  font-family: 'Bungee Outline';
+  text-shadow: -2px 1px 3px #000;
+}
+
+.rainbow-surf {
+  background:linear-gradient(to right, var(--accent-color2), var(--accent-color1), var(--accent-color3));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: rainbowAnimation 2s ease-in-out infinite;
+  background-size: 400% 100%;
+}
+
+.tooltiptext {
+  opacity: 0;
+  position: fixed;
+  top: 2%;
+  left: 3%;
+  height: 42vw;
+  transition: opacity 0.25s ease-in-out;
+  font-size: 1.5vw;
+  background-color: var(--main-color);
+  text-align: left;
+  width: 10%;
+  padding-top: 2%;
+  line-height: 2vw;
+  font-weight: 250;
+}
+
+.tooltiptext div {
+  margin-bottom: 20%;
+}
+
+.tooltiptext .love {
+  font-size: 1vw;
+  line-height: 1vw;
+}
+
+.tooltiptext .love a {
+  text-decoration: none;
+  color: var(--accent-color1);
+}
+
+.tooltiptext:hover {
+  opacity: 1;
+}
+
+
+@keyframes rainbowAnimation {
+  0%, 100% {
+    background-position: 0 0;
+  }
+  50% {
+    background-position: 100% 0;
+  }
+}

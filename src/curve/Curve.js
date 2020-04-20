@@ -1,6 +1,5 @@
 import React, { useState, useRef, useMemo } from 'react';
 import _ from 'lodash';
-import '../App.css';
 import {
   width, height, marginX, marginY,
   plotWidth, plotHeight,
@@ -9,6 +8,7 @@ import {
   getY, getValue,
 } from './layout.js';
 import bezierPath from './cubic-bezier.js';
+
 
 const keys = ['dissonance', 'color', 'gravity'];
 
@@ -31,7 +31,7 @@ const textProps = {
   cursor: 'pointer',
 };
 
-export default function({ play, forces, onNodeMove, onNodeRelease, onAddForce, onRemoveForce }) {
+export default function({ isPlaying, forces, onNodeMove, onNodeRelease, onAddForce, onRemoveForce }) {
 
   const [activeNode, setActiveNode] = useState(null);
   const [activeKey, setActiveKey] = useState(null);
@@ -211,7 +211,7 @@ export default function({ play, forces, onNodeMove, onNodeRelease, onAddForce, o
         >
           <tspan>{key}</tspan>
           {value !== undefined &&
-            <tspan className="fade-in-value">: {value}</tspan>
+            <tspan className="fade-in value">: {value}</tspan>
           }          
         </text>
         <text x={plotWidth} fontSize={headerFontSize} textAnchor="end">
@@ -223,10 +223,9 @@ export default function({ play, forces, onNodeMove, onNodeRelease, onAddForce, o
 
   return (
     <svg
-      className={`curve transition-opacity`}
+      className={`curve transition-opacity ${isPlaying && 'transparent'}`}
       ref={ref}
       viewBox={`0 0 ${width} ${height}`}
-      opacity={play ? 0.5 : 1}
       onPointerMove={onSVGPointerMove}
       onPointerUp={onSVGPointerUp}
       onPointerLeave={onSVGPointerLeave}
@@ -251,9 +250,10 @@ export default function({ play, forces, onNodeMove, onNodeRelease, onAddForce, o
         {forces.length > 1 &&
           <text { ...textProps } y={-width / 40} onClick={onRemoveForce}> - </text>
         }
-        <text { ...textProps } onClick={onAddForce}> + </text>
+        {forces.length < 10 &&
+          <text { ...textProps } onClick={onAddForce}> + </text>
+        }
       </g>
-      { play && <rect className="transition-opacity cover"/>}
     </svg>
   )
 }

@@ -1,7 +1,7 @@
 import React from 'react';
-import './App.css';
 
-export default function Header({ play, onPressPlay, onPressPause }) {
+
+export default function Header({ isPlaying, onPressPlay, onPressPause }) {
 
   const about = () => 
     <div className="tooltiptext">
@@ -13,6 +13,16 @@ export default function Header({ play, onPressPlay, onPressPause }) {
       <div> Click to see/hear your generated chords. </div>
       <span role="img" aria-label="rock-on"> 🤘 </span>
       <div> Play on. </div>
+      <div className="love">
+        made with &#10084; at the&nbsp;
+        <a
+          target="_blank"
+          rel="noopener noreferrer"
+          href="https://www.recurse.com"
+        >
+          recurse center
+        </a>
+      </div>
     </div>
   
   return (
@@ -24,9 +34,9 @@ export default function Header({ play, onPressPlay, onPressPause }) {
         <div>e</div>
         <div>r</div>
         <div>z</div>
-        <div onClick={play ? onPressPause : onPressPlay}>
-          <div className={`play ${!play && 'rainbow-surf'}`}>
-            { play ? '||' : '>' }
+        <div onClick={isPlaying ? onPressPause : onPressPlay}>
+          <div className={`play ${!isPlaying && 'rainbow-surf'}`}>
+            { isPlaying ? '||' : '>' }
           </div>
         </div>
       </div>

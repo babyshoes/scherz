@@ -12,8 +12,8 @@
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "react-scripts": "3.0.1",
-    "react-three-fiber": "^4.0.27",
-    "scherz.util": "^0.9.2",
+    "react-three-fiber": "^4.1.1",
+    "scherz.util": "^0.9.5",
     "three": "^0.108.0",
     "three-orbitcontrols": "^2.110.3"
   },

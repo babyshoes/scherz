@@ -11,7 +11,7 @@ export default function PitchMarker({ position, pitch, updateMaterial }) {
 
   return (
     <mesh position={position} name={pitch}>
-      <Dom ref={ref}> <span className="pitch"> { pitch } </span> </Dom>
+      <Dom ref={ref}> <span> { pitch } </span> </Dom>
       <sphereBufferGeometry attach="geometry" args={[0.1, 1, 1]} />
       <meshBasicMaterial ref={materialRef} attach="material" transparent />
     </mesh>

@@ -10,20 +10,22 @@ import PitchMarker from './PitchMarker';
 import ChordShape from './ChordShape';
 import usePrevious from '../util/usePrevious.js';
 
-const spiralLength = 20;
-const pitchesPerRev = 4
-const numRevs = spiralLength / pitchesPerRev
+const spiralLength = 21;
+const pitchesPerRev = 4;
+const emptySpaceCount = pitchesPerRev * 2;
+const arcCount = spiralLength-1 + emptySpaceCount;
+const numRevs = arcCount / pitchesPerRev;
 
-const topY = 6
-const bottomY = -6
-const totalHeight = topY - bottomY
-const diameter = 2
+const topY = 10;
+const bottomY = -10;
+const totalHeight = topY - bottomY;
+const diameter = 2;
 
 function getPoints() {
   const stepsPerRev = 64;
-  const radiansPerStep = (Math.PI * 2) / stepsPerRev
-  const stepCount = stepsPerRev * numRevs
-  const deltaY = totalHeight / stepCount
+  const radiansPerStep = (Math.PI * 2) / stepsPerRev;
+  const stepCount = stepsPerRev * numRevs;
+  const deltaY = totalHeight / stepCount;
 
   const getPoint = (numstep) => new THREE.Vector3(
     diameter * Math.cos(radiansPerStep * numstep), // x
@@ -32,7 +34,7 @@ function getPoints() {
   )
 
   const points = _.range(0, stepCount).map(getPoint)
-  return new THREE.CatmullRomCurve3(points).getPoints(1600)
+  return new THREE.CatmullRomCurve3(points).getPoints(arcCount*60)
 }
 
 const calculateCenter = (pitches) =>
@@ -56,7 +58,7 @@ const tweenOpacity = (initialOpacity, targetOpacity, duration, delay) => (materi
     .start();
 }
 
-const updatePrevSpiral = (prevCenter, center) => group => {
+const updatePrevSpiral = (prevCenter, center) => (group) => {
   const brightnessDiff = pitchToBrightness(center) - pitchToBrightness(prevCenter);
 
   group.rotation.y = 0;
@@ -67,7 +69,7 @@ const updatePrevSpiral = (prevCenter, center) => group => {
     .start();
   
   group.position.y = 0;
-  const heightPerPitch = totalHeight / spiralLength;
+  const heightPerPitch = totalHeight / arcCount;
   new TWEEN.Tween(group.position)
     .to({ y: group.position.y - (brightnessDiff * heightPerPitch) }, 250)
     .easing(TWEEN.Easing.Quadratic.Out)
@@ -83,8 +85,13 @@ export default function Spiral({ pitches, color }) {
 
   const points = useMemo(getPoints);
 
-  const n = Math.floor(points.length / (spiral.length-1));
-  const markerPositions = points.filter((_, index) => index % n === 0);
+  const n = Math.floor(points.length / arcCount);
+
+  const markerPositions = _.chain(points)
+    .filter((_, index) => index % n === 0)
+    .drop(emptySpaceCount / 2)
+    .dropRight(emptySpaceCount / 2)
+    .value();
 
   const chordVertices = pitches
     .map(pitch => spiral.indexOf(pitch))

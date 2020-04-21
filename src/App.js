@@ -135,30 +135,33 @@ class App extends React.Component {
     oscillator.stop(this.audioCtx.currentTime + delay + duration);
   }
 
-  setForce = (beat, key, value) => this.setState(
-    { forces: set([beat, key], value, this.state.forces) }
-  );
+  setForce = (beat, key, value) =>
+    this.setState(
+      { forces: set([beat, key], value, this.state.forces) }
+    );
 
-  addForce = () => this.setState(
-    { forces: [ ...this.state.forces, emptyForce ] },
-    () => this.generate(this.state.forces.length, { setBeat: true }),
-  )
+  addForce = () => {
+    const { forces } = this.state;
+    this.setState(
+      { forces: [ ...forces, emptyForce ] },
+      () => this.generate(forces.length, { setBeat: true }),
+    )
+  }
 
-  removeForce = () => {
-    const { forces, chordGroups, beat } = this.state;
-    this.setState({
+  removeForce = () =>
+    this.setState(({ forces, chordGroups, beat }) => ({
       forces: _.dropRight(forces, 1),
       chordGroups: _.dropRight(chordGroups, 1),
       ...(beat === forces.length-1 && { beat: forces.length-2 })
-    })
-  }
+    }))
 
-  playScale = (scale) => scaleIntervals[scale]
-    .reduce(
-      (notes, interval) => [ ...notes, _.last(notes) + interval],
-      [60]
-    )
-    .forEach((note, i) => this.playNote(note, 0.18, i*0.18));
+  playScale = (scale) =>
+    scaleIntervals[scale]
+      .reduce(
+        (notes, interval) => [ ...notes, _.last(notes) + interval],
+        [60]
+      )
+      .forEach((note, i) => this.playNote(note, 0.18, i*0.18));
 
   selectScale = (scale) => {
     const { scales } = this.state;
@@ -171,10 +174,12 @@ class App extends React.Component {
     }
   }
 
-  removeScale = (scale) => (this.state.scales.length > 1) && this.setState(
-    { scales: this.state.scales.filter(s => s !== scale) },
-    this.initialize,
-  );
+  removeScale = (scale) =>
+    (this.state.scales.length > 1) &&
+      this.setState(
+        { scales: this.state.scales.filter(s => s !== scale) },
+        this.initialize,
+      );
 
   onTonicChange = (tonic) => this.setState({ tonic }, this.initialize);
 
@@ -184,12 +189,13 @@ class App extends React.Component {
     (beat < forces.length - 1) && this.generate(beat+1, {});
   }, 250);
 
-  cycleChord = (beat, chordIndex) => this.setState(
-    ({ chordGroups }) => ({
-      beat, chordGroups: set([beat, 'chordIndex'], chordIndex, chordGroups)
-    }),
-    this.onCycle,
-  );
+  cycleChord = (beat, chordIndex) =>
+    this.setState(
+      ({ chordGroups }) => ({
+        beat, chordGroups: set([beat, 'chordIndex'], chordIndex, chordGroups)
+      }),
+      this.onCycle,
+    );
 
   cycleChordUp = (beat) => {
     const { chordGroups } = this.state;

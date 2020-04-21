@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import _ from 'lodash';
 import Chord from './Chord.js';
-import { marginY, headerHeight, arrowHeight, arrowWidth } from './layout.js';
+import { marginY, headerHeight, arrowHeight, arrowWidth, fontSize } from './layout.js';
 import usePrevious from '../util/usePrevious';
 
 
@@ -60,7 +60,7 @@ const ChordGroup = ({ chordGroup, onUpArrowClick, onDownArrowClick }) => {
             { arrow }
           </g>
         </g>
-        <text dominantBaseline="hanging" fontSize={12}>
+        <text dominantBaseline="hanging" fontSize={fontSize}>
           { chordIndex+1 }/{ chords.length }
         </text>
       </g>

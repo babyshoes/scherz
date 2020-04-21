@@ -1,6 +1,7 @@
 import React, { useRef } from 'react'
 import { Canvas, extend, useThree, useFrame } from 'react-three-fiber'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
+import _ from 'lodash';
 import Spiral from './Spiral'
 
 extend({ OrbitControls })
@@ -19,4 +20,8 @@ const SpiralCanvas = ({ isPlaying, chord, color }) =>
   </Canvas>
 
 
-export default React.memo(SpiralCanvas);
+export default React.memo(SpiralCanvas, (prevProps, nextProps) =>
+  _.isEqual(prevProps.isPlaying, nextProps.isPlaying)
+    && _.isEqual(new Set(prevProps.chord.pitches), new Set(nextProps.chord.pitches))
+    && _.isEqual(prevProps.color, nextProps.color)
+);

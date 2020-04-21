@@ -1,7 +1,7 @@
 import React from 'react';
 import _ from 'lodash';
 import Circle from './Circle.js';
-import { marginY, height, footerHeight } from './layout.js';
+import { marginY, height, footerHeight, fontSize } from './layout.js';
 
 
 const lowestNote = 40;
@@ -49,7 +49,7 @@ function Chord({ notes, pitches, name, transition }) {
         y={height - (marginY + footerHeight)}
         textAnchor="middle"
       >
-        <tspan> {name || '  '} </tspan>
+        <tspan fontSize={fontSize}> {name || '  '} </tspan>
       </text>
     </g>
   )

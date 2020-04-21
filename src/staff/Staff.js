@@ -43,7 +43,7 @@ export default function({
           height={lineSpacing*12}
           fill={colors[groupIndex % colors.length]}
           cursor="pointer"
-          onClick={onAreaClick(groupIndex)}
+          onClick={() => onAreaClick(groupIndex)}
         />
       </g>
     )

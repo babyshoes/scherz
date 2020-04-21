@@ -28,7 +28,12 @@ class App extends React.Component {
     };
   }
 
-  generateChords = (generateFrom) => {
+  createToken(beat) {
+    this.token = { beat, id: '_' + Math.random().toString(36).substr(2, 9) };
+    return this.token;
+  }
+
+  generateChords(generateFrom) {
     const { scales, tonic, forces } = this.state;
     if (generateFrom === 0) {
       return scherzClient.initialChords(scales, tonic, forces[0].dissonance)
@@ -38,23 +43,31 @@ class App extends React.Component {
     return scherzClient.generateChords(scales, prevChord, force);
   };
 
-  generate = async (generateFrom, setBeat=false) => {
-    const { forces, chordGroups } = this.state;
+  async generate(generateFrom, { token, setBeat=false }) {
+    const _token = token || this.createToken(generateFrom);
+    if (_token.beat <= this.token.beat && _token.id !== this.token.id) {
+      return;
+    }
     const generatedChords = await this.generateChords(generateFrom);
     const newChordGroup = { chords: generatedChords, chordIndex: 0 };
     const selectedChordHasChanged = !_.isEqual(generatedChords[0], this.selectedChords[generateFrom]);
-    const isNotLastChord = generateFrom < forces.length - 1;
-    const newChordGroups = set(generateFrom, newChordGroup, chordGroups)
+    const isNotLastChord = generateFrom < this.state.forces.length-1;
+    const progressionIsIncomplete = this.selectedChords.length !== this.state.forces.length;
+
     this.setState(
-      { chordGroups: newChordGroups, ...(setBeat && {beat: generateFrom}) },
+      ({ chordGroups }) => ({
+        chordGroups: set(generateFrom, newChordGroup, chordGroups),
+        ...(setBeat && {beat: generateFrom}),
+      }),
       () => {
         setBeat && this.playSelectedChord();
-        selectedChordHasChanged && isNotLastChord && this.generate(generateFrom+1);
+        (progressionIsIncomplete || selectedChordHasChanged) && isNotLastChord
+          && this.generate(generateFrom+1, { token: _token });
       }
     )
   };
 
-  initialize = () => this.generate(0);
+  initialize = () => this.generate(0, {});
 
   get selectedChords() {
     return this.state.chordGroups.map(
@@ -106,7 +119,7 @@ class App extends React.Component {
 
   midiToHz = (midi) => Math.pow(2, (midi-69)/12) * 440;
 
-  playNote = (note, duration, delay=0) => {
+  playNote(note, duration, delay=0) {
     const hz = this.midiToHz(note);
 
     const gainNode = this.audioCtx.createGain();
@@ -126,13 +139,10 @@ class App extends React.Component {
     { forces: set([beat, key], value, this.state.forces) }
   );
 
-  addForce = () => {
-    const { forces } = this.state;
-    this.setState(
-      { forces: [ ...forces, emptyForce ] },
-      () => this.generate(forces.length, true),
-    )
-  }
+  addForce = () => this.setState(
+    { forces: [ ...this.state.forces, emptyForce ] },
+    () => this.generate(this.state.forces.length, { setBeat: true }),
+  )
 
   removeForce = () => {
     const { forces, chordGroups, beat } = this.state;
@@ -161,29 +171,25 @@ class App extends React.Component {
     }
   }
 
-  removeScale = (scale) => {
-    const { scales } = this.state;
-    if (scales.length > 1) {
-      this.setState(
-        { scales: scales.filter(s => s !== scale) },
-        this.initialize,
-      );
-    }
-  }
+  removeScale = (scale) => (this.state.scales.length > 1) && this.setState(
+    { scales: this.state.scales.filter(s => s !== scale) },
+    this.initialize,
+  );
 
   onTonicChange = (tonic) => this.setState({ tonic }, this.initialize);
 
-  cycleChord = (beat, chordIndex) => {
-    const { chordGroups, forces } = this.state;
-    const newChordGroups = set([beat, 'chordIndex'], chordIndex, chordGroups)
-    this.setState(
-      { chordGroups: newChordGroups, beat },
-      () => {
-        this.playSelectedChord();
-        (beat < forces.length - 1) && this.generate(beat+1);
-      }
-    )
-  };
+  onCycle = _.debounce(function() {
+    const { beat, forces } = this.state;
+    this.playSelectedChord();
+    (beat < forces.length - 1) && this.generate(beat+1, {});
+  }, 250);
+
+  cycleChord = (beat, chordIndex) => this.setState(
+    ({ chordGroups }) => ({
+      beat, chordGroups: set([beat, 'chordIndex'], chordIndex, chordGroups)
+    }),
+    this.onCycle,
+  );
 
   cycleChordUp = (beat) => {
     const { chordGroups } = this.state;
@@ -197,12 +203,12 @@ class App extends React.Component {
     this.cycleChord(beat, (chordIndex-1 + chords.length) % chords.length);
   }
 
-  setBeat = (beat) => () => this.setState({ beat }, this.playSelectedChord);
+  setBeat = (beat) => this.setState({ beat }, this.playSelectedChord);
 
-  playSelectedChord = () => this.selectedChord.notes
-    .forEach(note => this.playNote(note, 0.75));
+  playSelectedChord = () =>
+    this.selectedChord.notes.forEach(note => this.playNote(note, 0.75));
 
-  playOn = () => {
+  playOn() {
     const { beat, forces, isPlaying } = this.state;
     this.playSelectedChord();
     setTimeout(() => {
@@ -234,7 +240,7 @@ class App extends React.Component {
           isPlaying={isPlaying}
           forces={forces}
           onNodeMove={this.setForce}
-          onNodeRelease={(beat) => this.generate(beat, true)}
+          onNodeRelease={(beat) => this.generate(beat, { setBeat: true })}
           onAddForce={this.addForce}
           onRemoveForce={this.removeForce}
         />
@@ -258,7 +264,6 @@ class App extends React.Component {
       </div>
     )
   }
-
 }
 
 export default App;

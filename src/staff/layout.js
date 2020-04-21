@@ -4,7 +4,7 @@ export const height = 400;
 export const marginX = width / 25;
 export const marginY = height / 25;
 
-export const headerHeight = height / 20;
+export const headerHeight = height / 15;
 export const headerFontSize = height * (3/5);
 export const footerHeight = height / 20;
 
@@ -25,4 +25,4 @@ export const circleRadius = width / 120;
 export const ledgerLineWidth = circleRadius * 3
 export const offsetWidth = width / 50;
 
-export const fontSize = width / 50;
+export const fontSize = height / 25;

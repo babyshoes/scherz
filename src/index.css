@@ -59,6 +59,16 @@ circle {
   opacity: 0.5;
 }
 
+.disabled {
+  opacity: 0.25 !important;
+  pointer-events: none !important;
+}
+
+.disabled-cursor {
+  opacity: 0.25 !important;
+  cursor: not-allowed !important;
+}
+
 .staff {
   grid-area: staff;
   width: 100%;
@@ -69,8 +79,16 @@ rect.chord {
   opacity: 0;
 }
 
+rect.chord:not(.on-beat) {
+  transition: opacity 0.25s;
+}
+
 rect.chord:hover, rect.chord.on-beat {
   opacity: 0.25;
+}
+
+.chord-count {
+  animation: fadeInDown 0.25s;
 }
 
 .forces {
@@ -94,10 +112,13 @@ circle.node {
   cursor: pointer;
 }
 
-circle.node.disabled {
-  cursor: not-allowed;
+circle.node.disabled-cursor {
   fill: white;
-  opacity: 0.25;
+}
+
+.add-force, .remove-force {
+  text-anchor: middle;
+  cursor: pointer;
 }
 
 rect.layer {
@@ -142,7 +163,7 @@ rect.layer {
 
 .multiselect .options {
   position: absolute;
-  width: 12vw;
+  width: 10vw;
   padding-left: 1.5vw;
   background-color: rgba(87,78,92, 0.75);
   z-index: 1;
@@ -151,10 +172,6 @@ rect.layer {
 .multiselect .options .option {
   opacity: 0.5;
   cursor: pointer;
-}
-
-.multiselect .options .option.disabled {
-  cursor: not-allowed;
 }
 
 .multiselect .options .option:hover:not(.disabled) {
@@ -238,12 +255,6 @@ rect.layer {
 .arrow {
   cursor: pointer;
   fill: white;
-}
-
-.arrow.disabled {
-  cursor: default;
-  opacity: 0.25;
-  pointer-events: none;
 }
 
 .scherz {

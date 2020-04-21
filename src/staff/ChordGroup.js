@@ -5,7 +5,7 @@ import { marginY, headerHeight, arrowHeight, arrowWidth, fontSize } from './layo
 import usePrevious from '../util/usePrevious';
 
 
-const ChordGroup = ({ chordGroup, onUpArrowClick, onDownArrowClick }) => {
+const ChordGroup = ({ beat, chordGroup, onUpArrowClick, onDownArrowClick }) => {
 
   const arrow = useMemo(() => {
     const arrowPath =  `
@@ -42,8 +42,9 @@ const ChordGroup = ({ chordGroup, onUpArrowClick, onDownArrowClick }) => {
   }
 
   const arrowsAreDisabled = chords.length === 1;
+
   return (
-    <g>
+    <>
       <g transform={`translate(0, ${marginY})`}>
         <g transform={`translate(-${arrowWidth}, 0)`}>
           <g
@@ -60,12 +61,17 @@ const ChordGroup = ({ chordGroup, onUpArrowClick, onDownArrowClick }) => {
             { arrow }
           </g>
         </g>
-        <text dominantBaseline="hanging" fontSize={fontSize}>
+        <text
+          className="chord-count"
+          key={`chord-count-${beat}-${chords.length}`}
+          dominantBaseline="hanging"
+          fontSize={fontSize}
+        >
           { chordIndex+1 }/{ chords.length }
         </text>
       </g>
       <Chord key={selectedChord.notes.join('-')} { ...selectedChord } transition={transition} />
-    </g>
+    </>
   )
 }
 

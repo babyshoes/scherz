@@ -13,7 +13,7 @@ export default function Multiselect({ selected, options, onSelect, onRemove, max
     return (
       <div
         key={`option-${option}`}
-        className={`option transition-opacity ${isSelected && 'selected'} ${isDisabled && 'disabled'}`}
+        className={`option transition-opacity ${isSelected && 'selected'} ${isDisabled && 'disabled-cursor'}`}
         onClick={() => isSelected ? onRemove(option) : onSelect(option)}
       >
         {option}

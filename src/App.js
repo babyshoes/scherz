@@ -10,7 +10,7 @@ import ScaleSelect from './ScaleSelect.js';
 import SpiralCanvas from './spiral/SpiralCanvas.js';
 
 
-const initialForces = [{"color":0,"dissonance":0.1,"gravity":0}, {"color":0,"dissonance":0.2,"gravity":0}, {"color":0.4,"dissonance":0.4,"gravity":0.25}, {"color":0.2,"dissonance":0.8,"gravity":0}, {"color":0,"dissonance":0.5,"gravity":0.25}];
+const initialForces = [{"color":0,"dissonance":0.1,"gravity":0}, {"color":0,"dissonance":0.2,"gravity":0}, {"color":0.4,"dissonance":0.5,"gravity":0.25}, {"color":0.2,"dissonance":0.8,"gravity":0}, {"color":0,"dissonance":0.5,"gravity":0.25}];
 const emptyForce = { color: 0, dissonance: 0, gravity: 0 };
 const colors = ['#3da4ab', '#f6cd61', '#fe8a71'];
 
@@ -49,8 +49,14 @@ class App extends React.Component {
       return;
     }
     const generatedChords = await this.generateChords(generateFrom);
-    const newChordGroup = { chords: generatedChords, chordIndex: 0 };
-    const selectedChordHasChanged = !_.isEqual(generatedChords[0], this.selectedChords[generateFrom]);
+    let newChordIndex = _.findIndex(
+      generatedChords, 
+      chord => _.isEqual(chord.notes, _.get(this.selectedChords[generateFrom], 'notes'))
+    );
+    if (newChordIndex === -1) {
+      newChordIndex = null;
+    }
+    const newChordGroup = { chords: generatedChords, chordIndex: newChordIndex || 0 };
     const isNotLastChord = generateFrom < this.state.forces.length-1;
     const progressionIsIncomplete = this.selectedChords.length !== this.state.forces.length;
 
@@ -61,7 +67,7 @@ class App extends React.Component {
       }),
       () => {
         setBeat && this.playSelectedChord();
-        (progressionIsIncomplete || selectedChordHasChanged) && isNotLastChord
+        (progressionIsIncomplete || !newChordIndex) && isNotLastChord
           && this.generate(generateFrom+1, { token: _token });
       }
     )

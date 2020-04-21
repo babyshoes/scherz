@@ -25,8 +25,6 @@ const blurbs = {
 const textProps = {
   fontSize: width / 40,
   dominantBaseline: 'middle',
-  textAnchor: 'middle',
-  cursor: 'pointer',
 };
 
 export default function({ isPlaying, forces, onNodeMove, onNodeRelease, onAddForce, onRemoveForce }) {
@@ -100,7 +98,7 @@ export default function({ isPlaying, forces, onNodeMove, onNodeRelease, onAddFor
 
     return (
       <circle
-        className={`node ${disabled && 'disabled'} transition-opacity`}
+        className={`node ${disabled && 'disabled-cursor'} transition-opacity`}
         key={`node${index}${key}`}
         cy={getY(value)} r={6}
         opacity={getOpacity(key)}
@@ -247,12 +245,19 @@ export default function({ isPlaying, forces, onNodeMove, onNodeRelease, onAddFor
         { _.range(forces.length).map(renderHoverArea) }
         { forces.map(renderNodes) }
         <g transform={`translate(${curveEnd + (curveMarginX/2)}, ${getY(0)})`}>
-          {forces.length > 1 &&
-            <text { ...textProps } y={-width / 40} onClick={onRemoveForce}> - </text>
-          }
-          {forces.length < 10 &&
-            <text { ...textProps } onClick={onAddForce}> + </text>
-          }
+          <text { ...textProps }
+            className={`remove-force ${forces.length <= 1 && 'disabled'}`}
+            y={-width / 40}
+            onClick={onRemoveForce}
+          >
+            -
+          </text>
+          <text { ...textProps }
+            className={`add-force ${forces.length >= 10 && 'disabled'}`}
+            onClick={onAddForce}
+          >
+            +
+          </text>
         </g>
       </svg>
     </>

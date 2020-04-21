@@ -14,7 +14,7 @@ export default function({ pitch, space, offset }) {
     .replace(/b/gi, '♭')
 
   return (
-    <g>
+    <>
       <circle
         r={circleRadius} cx={x} cy={y}
       />
@@ -32,6 +32,6 @@ export default function({ pitch, space, offset }) {
       >
         { accidentals }
       </text>
-    </g>
+    </>
   )
 }

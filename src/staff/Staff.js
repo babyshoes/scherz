@@ -8,7 +8,7 @@ import {
 } from './layout.js';
 
 
-export default function({
+export default function Staff({
   isPlaying, beat, colors, chordGroups, forceCount,
   onUpArrowClick, onDownArrowClick, onAreaClick
 }) {
@@ -26,22 +26,24 @@ export default function({
     
   function renderChordGroup(chordGroup, groupIndex) {
     const chordSpacing = (chordsEnd - chordsStart) / (forceCount-1);
+    const color = colors[groupIndex % colors.length];
     const x = (groupIndex * chordSpacing) + chordsStart;
 
     return (
       <g key={`chordGroup${groupIndex}`} transform={`translate(${x}, 0)`}>
         <ChordGroup
+          beat={groupIndex}
           chordGroup={chordGroup}
           onUpArrowClick={() => onUpArrowClick(groupIndex)}
           onDownArrowClick={() => onDownArrowClick(groupIndex)}
         />
         <rect
-          className={`chord transition-opacity ${groupIndex === beat && 'on-beat'}`}
+          className={`chord ${groupIndex === beat && 'on-beat'}`}
           x={chordSpacing / -4}
           y={marginY + headerHeight + lineSpacing}
           width={chordSpacing / 2}
           height={lineSpacing*12}
-          fill={colors[groupIndex % colors.length]}
+          fill={color}
           cursor="pointer"
           onClick={() => onAreaClick(groupIndex)}
         />

@@ -5,6 +5,8 @@
   "dependencies": {
     "@tweenjs/tween.js": "^18.5.0",
     "axios": "^0.19.2",
+    "http-server": "^0.12.1",
+    "if-env": "^1.0.4",
     "lodash": "^4.17.15",
     "lodash.combinations": "^18.9.19",
     "react": "^16.13.1",
@@ -15,8 +17,10 @@
     "three": "^0.108.0"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
+    "start": "if-env NODE_ENV=production && npm run prod:start || npm run dev:start",
+    "dev:start": "react-scripts start",
+    "prod:start": "static build --gzip",
+    "build": "react-scripts build && gzip -rk build && refresh",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject"
   },

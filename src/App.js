@@ -266,13 +266,13 @@ class App extends React.Component {
           onUpArrowClick={this.cycleChordUp}
           onAreaClick={this.setBeat}
         />
-          { this.selectedChord &&
-            <SpiralCanvas
-              isPlaying={isPlaying}
-              chord={this.selectedChord}
-              color={colors[beat % colors.length]}
-            />
-          }
+        { this.selectedChord &&
+          <SpiralCanvas
+            isPlaying={isPlaying}
+            chord={this.selectedChord}
+            color={colors[beat % colors.length]}
+          />
+        }
       </div>
     )
   }

@@ -36,13 +36,14 @@ export default function({ isPlaying, forces, onNodeMove, onNodeRelease, onAddFor
 
   const activeArea = useMemo(() => activeNode && activeNode.index, [activeNode]);
   
-  const toggleActiveKey = (key) => {
-    activeKey === key ? setActiveKey(null) : setActiveKey(key);
-  }
+  const toggleActiveKey = (key) =>
+    activeKey === key
+      ? setActiveKey(null)
+      : setActiveKey(key);
 
   const ref = useRef(null);
 
-  const xBetweenNodes = (curveWidth / (forces.length-1));
+  const xBetweenNodes = curveWidth / (forces.length-1);
   const getX = index => xBetweenNodes * index + curveStart;
 
   function getMousePosition(e) {
@@ -84,11 +85,11 @@ export default function({ isPlaying, forces, onNodeMove, onNodeRelease, onAddFor
 
   function renderNode(index, key, value) {
 
-    const disabled = index === 0 && ['color', 'gravity'].includes(key)
+    const isDisabled = index === 0 && ['color', 'gravity'].includes(key)
     
     function onPointerEnter() {
       setHoveredArea(index);
-      !disabled && setHoveredKey(key);
+      !isDisabled && setHoveredKey(key);
     }
 
     function reset() {
@@ -98,14 +99,14 @@ export default function({ isPlaying, forces, onNodeMove, onNodeRelease, onAddFor
 
     return (
       <circle
-        className={`node ${disabled && 'disabled-cursor'} transition-opacity`}
+        className={`node ${isDisabled && 'disabled-cursor'} transition-opacity`}
         key={`node${index}${key}`}
         cy={getY(value)} r={6}
         opacity={getOpacity(key)}
         onPointerEnter={onPointerEnter}
         onPointerLeave={reset}
-        onPointerDown={() => !disabled && setActiveNode({ index, key })}
-        onPointerUp={() => !disabled && setActiveKey(key)}
+        onPointerDown={() => !isDisabled && setActiveNode({ index, key })}
+        onPointerUp={() => !isDisabled && setActiveKey(key)}
       />
     )
   }
@@ -180,7 +181,7 @@ export default function({ isPlaying, forces, onNodeMove, onNodeRelease, onAddFor
     )
   }
 
-  function renderHeading(key, index) {
+  function renderHeading(key) {
     let value;
     if (activeNode && activeNode.key === key) {
       value = forces[activeNode.index][key];

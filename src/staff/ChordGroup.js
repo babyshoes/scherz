@@ -1,76 +1,88 @@
 import React, { useMemo } from 'react';
 import _ from 'lodash';
-import Chord from './Chord.js';
-import { marginY, headerHeight, arrowHeight, arrowWidth, fontSize } from './layout.js';
-import usePrevious from '../util/usePrevious';
+import Chord from './Chord';
+import { marginTop, headerHeight, arrowWidth, arrowHeight, fontSize } from './layout';
+import arrowSVG from '../util/arrow-svg';
+import usePrevious from '../util/use-previous';
 
 
-const ChordGroup = ({ beat, chordGroup, onUpArrowClick, onDownArrowClick }) => {
+const arrow = arrowSVG(arrowWidth, arrowHeight);
 
-  const arrow = useMemo(() => {
-    const arrowPath =  `
-      M -${arrowWidth / 2} ${arrowHeight}
-      L 0,0
-      L ${arrowWidth / 2} ${arrowHeight}
-      z
-    `
-    return (
-      <g>
-        <rect
-          transform={`translate(-${arrowWidth}, -${arrowHeight})`}
-          opacity={0}
-          width={arrowWidth*2}
-          height={arrowHeight*2}
-        />
-        <path d={arrowPath} fill="white" />
-      </g>
-    )
-  }, [])
+const ChordGroup = ({ beat, chordGroup, offset, onUpArrowClick, onDownArrowClick }) => {
 
   const { chords, chordIndex } = chordGroup;
   const selectedChord = chords[chordIndex];
 
   const previousChordIndex = usePrevious(chordIndex);
 
-  let transition;
-  if (!_.isNumber(previousChordIndex) || chordIndex - previousChordIndex === 0) {
-    transition = null;
-  } else if (chordIndex - previousChordIndex > 0) {
-    transition = 'up';
-  } else {
-    transition = 'down';
-  }
+  const yTransition = useMemo(
+    () => {
+      if (!_.isNumber(previousChordIndex) || chordIndex === previousChordIndex) {
+        return null;
+      } else if (chordIndex > previousChordIndex) {
+        return 'up';
+      } else {
+        return 'down';
+      }
+    },
+    [chordIndex, previousChordIndex],
+  );
+
+  const previousOffset = usePrevious(offset);
+
+  const xTransition = useMemo(
+    () => {
+      if (!_.isNumber(previousOffset) || previousOffset === offset) {
+        return null;
+      } else if (offset < previousOffset) {
+        return 'right';
+      } else {
+        return 'left';
+      }
+    },
+    [previousOffset, offset]
+  );
+
 
   const arrowsAreDisabled = chords.length === 1;
 
   return (
     <>
-      <g transform={`translate(0, ${marginY})`}>
-        <g transform={`translate(-${arrowWidth}, 0)`}>
-          <g
-            className={`arrow ${arrowsAreDisabled && 'disabled'}`}
-            onClick={onUpArrowClick}
-          >
-            { arrow }
+      <g
+        key={`chord-group-${beat}`}
+        className={`swipe ${xTransition}`}
+      >
+        <g transform={`translate(0, ${marginTop})`}>
+          <g transform={`translate(-${arrowWidth}, 0)`}>
+            <g
+              className={`arrow ${arrowsAreDisabled && 'disabled'}`}
+              onClick={onUpArrowClick}
+            >
+              { arrow }
+            </g>
+            <g
+              className={`arrow ${arrowsAreDisabled && 'disabled'}`}
+              transform={`translate(0, ${headerHeight}) rotate(180)`}
+              onClick={onDownArrowClick}
+            >
+              { arrow }
+            </g>
           </g>
-          <g
-            className={`arrow ${arrowsAreDisabled && 'disabled'}`}
-            transform={`translate(0, ${headerHeight}) rotate(180)`}
-            onClick={onDownArrowClick}
+          <text
+            className={!xTransition && 'fade-in down'}
+            key={`chord-count-${beat}-${chords.length}`}
+            dominantBaseline="hanging"
+            fontSize={fontSize}
           >
-            { arrow }
-          </g>
+            { chordIndex+1 }/{ chords.length }
+          </text>
         </g>
-        <text
-          className="chord-count"
-          key={`chord-count-${beat}-${chords.length}`}
-          dominantBaseline="hanging"
-          fontSize={fontSize}
-        >
-          { chordIndex+1 }/{ chords.length }
-        </text>
+        <Chord
+          key={selectedChord.notes.join('-')}
+          { ...selectedChord }
+          yTransition={yTransition}
+        />
       </g>
-      <Chord key={selectedChord.notes.join('-')} { ...selectedChord } transition={transition} />
     </>
   )
 }

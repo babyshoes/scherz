@@ -8,7 +8,7 @@ import TWEEN from '@tweenjs/tween.js'
 import SpiralLine from './SpiralLine';
 import PitchMarker from './PitchMarker';
 import ChordShape from './ChordShape';
-import usePrevious from '../util/usePrevious.js';
+import usePrevious from '../util/use-previous';
 
 const spiralLength = 21;
 const pitchesPerRev = 4;
@@ -131,7 +131,7 @@ export default function Spiral({ pitches, color }) {
   });
 
   return (
-    <group>
+    <>
       <group>
         <SpiralLine points={points} updateMaterial={tweenOpacity(0, 1, 100, 200)}/>
         { markers }
@@ -152,6 +152,6 @@ export default function Spiral({ pitches, color }) {
           />
         </group>
       }
-    </group>
+    </>
   )
 }

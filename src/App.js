@@ -2,17 +2,19 @@ import React from 'react';
 import _ from 'lodash';
 import { set } from 'lodash/fp';
 import { scaleIntervals } from 'scherz.util';
-import scherzClient from './util/scherz-client.js';
-import Header from './Header.js';
-import Curve from './curve/Curve.js';
-import Staff from './staff/Staff.js';
-import ScaleSelect from './ScaleSelect.js';
-import SpiralCanvas from './spiral/SpiralCanvas.js';
+import scherzClient from './util/scherz-client';
+import Header from './Header';
+import Curve from './curve/Curve';
+import Staff from './staff/Staff';
+import ScaleSelect from './ScaleSelect';
+import SpiralCanvas from './spiral/SpiralCanvas';
 
 
-const initialForces = [{"color":0,"dissonance":0.1,"gravity":0}, {"color":0,"dissonance":0.2,"gravity":0}, {"color":0.4,"dissonance":0.5,"gravity":0.25}, {"color":0.2,"dissonance":0.8,"gravity":0}, {"color":0,"dissonance":0.5,"gravity":0.25}];
+const initialForces = [{"color":0,"dissonance":0.1,"gravity":0}, {"color":0,"dissonance":0.25,"gravity":0}, {"color":0.4,"dissonance":0.5,"gravity":0.25}, {"color":0.2,"dissonance":0.8,"gravity":0}, {"color":0,"dissonance":0.5,"gravity":0.25}];
 const emptyForce = { color: 0, dissonance: 0, gravity: 0 };
 const colors = ['#3da4ab', '#f6cd61', '#fe8a71'];
+
+const displayCount = 5;
 
 class App extends React.Component {
   
@@ -24,6 +26,7 @@ class App extends React.Component {
       chordGroups: [],
       forces: initialForces,
       beat: 0,
+      offset: 0,
       isPlaying: false,
     };
   }
@@ -108,19 +111,25 @@ class App extends React.Component {
   onPressDown = () => this.cycleChordDown(this.state.beat);
 
   onPressLeft = () => {
-    const { beat, forces } = this.state;
-    this.setState(
-      { beat: (beat-1 + forces.length) % forces.length },
+    const { beat, offset } = this.state;
+    const newoffset = (offset !== 0 && offset === beat)
+      ? offset-1
+      : offset;
+    (beat !== 0) && this.setState(
+      { beat: beat-1, offset: newoffset },
       this.playSelectedChord,
     )
   }
 
   onPressRight = () => {
-    const { beat, forces } = this.state;
-    this.setState(
-      { beat: (beat+1) % forces.length },
-      this.playSelectedChord,
-    )  
+    const { beat, offset, forces, chordGroups } = this.state;
+    if (beat < forces.length-1 && chordGroups[beat+1]) {
+      const newoffset = (beat === offset + (displayCount-1)) ? offset+1 : offset;
+      this.setState(
+        { beat: beat+1, offset: newoffset },
+        this.playSelectedChord,
+      )
+    }
   }
 
   midiToHz = (midi) => Math.pow(2, (midi-69)/12) * 440;
@@ -146,19 +155,28 @@ class App extends React.Component {
       { forces: set([beat, key], value, this.state.forces) }
     );
 
-  addForce = () => {
-    const { forces } = this.state;
+  addForce = () =>
     this.setState(
-      { forces: [ ...forces, emptyForce ] },
-      () => this.generate(forces.length, { setBeat: true }),
+      ({ forces }) => (
+        {
+          forces: [ ...forces, emptyForce ],
+          offset: Math.max(forces.length - (displayCount-1), 0),
+        }
+      ),
+      () => {
+        const { forces, chordGroups } = this.state;
+        if (forces.length === chordGroups.length+1) {
+          this.generate(forces.length-1, { setBeat: true })
+        }
+      }
     )
-  }
 
   removeForce = () =>
     this.setState(({ forces, chordGroups, beat }) => ({
       forces: _.dropRight(forces, 1),
       chordGroups: _.dropRight(chordGroups, 1),
-      ...(beat === forces.length-1 && { beat: forces.length-2 })
+      offset: Math.max(forces.length - (displayCount+1), 0),
+      beat: forces.length-2,
     }))
 
   playScale = (scale) =>
@@ -174,7 +192,7 @@ class App extends React.Component {
     if (scales.length < 2) {
       this.playScale(scale);
       this.setState(
-        { scales: [ ...this.state.scales, scale ] },
+        { scales: [ ...scales, scale ] },
         this.initialize,
       );
     }
@@ -217,16 +235,36 @@ class App extends React.Component {
 
   setBeat = (beat) => this.setState({ beat }, this.playSelectedChord);
 
+  offsetRight = () => this.setState(
+    ({ beat, offset }) => ({ beat: beat+1, offset: offset+1 }),
+    this.playSelectedChord,
+  );
+
+  offsetLeft = () => this.setState(
+    ({ beat, offset }) => ({ beat: beat-1, offset: offset-1 }),
+    this.playSelectedChord,
+  )
+
   playSelectedChord = () =>
     this.selectedChord.notes.forEach(note => this.playNote(note, 0.75));
 
   playOn() {
-    const { beat, forces, isPlaying } = this.state;
     this.playSelectedChord();
     setTimeout(() => {
       this.setState(
-        { beat: (beat+1) % forces.length },
-        () => isPlaying && this.playOn(),
+        ({ beat, forces, offset }) => {
+          const newBeat = (beat+1) % forces.length;
+          let newoffset;
+          if (newBeat === 0) {
+            newoffset = 0;
+          } else if (beat === offset + (displayCount-1)) {
+            newoffset = offset+1;
+          } else {
+            newoffset = offset;
+          }
+          return { beat: newBeat, offset: newoffset };
+        },
+        () => this.state.isPlaying && this.playOn(),
       )
     }, 1000);
   }
@@ -235,7 +273,7 @@ class App extends React.Component {
   pause = () => this.setState({ isPlaying: false });
 
   render() {
-    const { scales, isPlaying, beat, forces, chordGroups } = this.state;
+    const { scales, isPlaying, beat, offset, forces, chordGroups } = this.state;
     return (
       <div className="App">
         <Header
@@ -251,14 +289,18 @@ class App extends React.Component {
         <Curve
           isPlaying={isPlaying}
           forces={forces}
+          offset={offset}
           onNodeMove={this.setForce}
           onNodeRelease={(beat) => this.generate(beat, { setBeat: true })}
           onAddForce={this.addForce}
           onRemoveForce={this.removeForce}
+          onLeftArrowClick={this.offsetLeft}
+          onRightArrowClick={this.offsetRight}
         />
         <Staff
           isPlaying={isPlaying}
           beat={beat}
+          offset={offset}
           colors={colors}
           chordGroups={chordGroups}
           forceCount={forces.length}

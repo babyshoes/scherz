@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useMemo, useCallback } from 'react';
 import _ from 'lodash';
-import Circle from './Circle.js';
-import { marginY, height, footerHeight, fontSize } from './layout.js';
+import Circle from './Circle';
+import { marginBottom, height, footerHeight, fontSize } from './layout';
 
 
 const lowestNote = 40;
@@ -24,29 +24,43 @@ function getSpace([note, pitch]) {
   return base + octave;
 }
 
-function Chord({ notes, pitches, name, transition }) {
+const renderCircle = ([pitch, space, offset], index) => 
+  <Circle key={index} pitch={pitch} space={space} offset={offset} />
 
-  const spaces = _.zip(notes, pitches).map(getSpace);
+function Chord({ notes, pitches, name, yTransition }) {
 
-  function addOffset(offsets, space, index) {
-    const adjacent = space - spaces[index-1] === 1;
-    const offset = (index === 0 || !adjacent)
-      ? false
-      : !_.last(offsets);
-    return [ ...offsets, offset ];
-  }
+  const spaces = useMemo(
+    () => _.zip(notes, pitches).map(getSpace),
+    [notes, pitches]
+  );
 
-  const offsets = spaces.reduce(addOffset, []);
+  const addOffset = useCallback(
+    function add(offsets, space, index) {
+      const adjacent = space - spaces[index-1] === 1;
+      const offset = (index === 0 || !adjacent)
+        ? false
+        : !_.last(offsets);
+      return [ ...offsets, offset ];
+    },
+    [spaces],
+  )
 
-  const renderCircle = ([pitch, space, offset], index) => 
-    <Circle key={index} pitch={pitch} space={space} offset={offset} />
+  const offsets = useMemo(
+    () => spaces.reduce(addOffset, []),
+    [spaces, addOffset]
+  );
+
+  const circles = useMemo(
+    () => _.zip(pitches, spaces, offsets).map(renderCircle),
+    [pitches, spaces, offsets],
+  )
 
   return (
-    <g className={`fade-in ${transition}`}>
-      { _.zip(pitches, spaces, offsets).map(renderCircle) }
+    <g className={`fade-in ${yTransition}`}>
+      { circles }
       <text
         dominantBaseline="hanging"
-        y={height - (marginY + footerHeight)}
+        y={height - (marginBottom + footerHeight)}
         textAnchor="middle"
       >
         <tspan fontSize={fontSize}> {name || '  '} </tspan>

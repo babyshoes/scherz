@@ -3,7 +3,7 @@ import * as THREE from 'three'
 import { useUpdate } from 'react-three-fiber';
 import _ from 'lodash'
 
-export default function({ vertices, color, updateMaterial }) {
+export default function ChordShape({ vertices, color, updateMaterial }) {
 
   const faces = _
     .combinations(_.range(0, vertices.length), 3)

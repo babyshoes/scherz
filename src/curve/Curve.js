@@ -1,50 +1,63 @@
-import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useRef, useMemo, useCallback } from 'react';
 import _ from 'lodash';
 import {
-  width, height, marginY,
-  plotHeight, getY, getValue,
-  curveStart, curveEnd, curveWidth, curveMarginX,
+  width, height, marginTop, nodeRadius,
+  getY, getValue, arrowWidth, arrowHeight,
+  curveHeight, curveStart, curveEnd, curveWidth, curveMarginX,
 } from './layout.js';
 import bezierPath from './cubic-bezier.js';
+import arrowSVG from '../util/arrow-svg.js';
+import usePrevious from '../util/use-previous.js';
 
 
 const keys = ['dissonance', 'color', 'gravity'];
 
-const colors = {
-  color: '#f6cd61',
-  dissonance: '#fe8a71',
-  gravity: '#3da4ab',
-};
+const arrow = arrowSVG(arrowWidth, arrowHeight);
 
-const blurbs = {
-	color: 'allows chords to venture further out in the circle of fifths',
-	dissonance: 'results in more "unnatural" sounding chords',
-	gravity: 'prioritizes half step resolutions and tighter voice leading'
-};
+const displayCount = 5;
+const xBetweenNodes = curveWidth / (displayCount-1);
 
-const textProps = {
-  fontSize: width / 40,
-  dominantBaseline: 'middle',
-};
+const getX = index => xBetweenNodes * index + curveStart;
 
-export default function({ isPlaying, forces, onNodeMove, onNodeRelease, onAddForce, onRemoveForce }) {
+export default function Curve({
+  isPlaying, forces, offset, onNodeMove, onNodeRelease,
+  onAddForce, onRemoveForce, onLeftArrowClick, onRightArrowClick,
+}) {
 
   const [activeNode, setActiveNode] = useState(null);
   const [activeKey, setActiveKey] = useState(null);
   const [hoveredKey, setHoveredKey] = useState(null);
   const [hoveredArea, setHoveredArea] = useState(null);
 
+  const displayedForces = useMemo(() =>
+    forces.slice(offset, displayCount+offset), [forces, offset]
+  );
   const activeArea = useMemo(() => activeNode && activeNode.index, [activeNode]);
   
-  const toggleActiveKey = (key) =>
-    activeKey === key
-      ? setActiveKey(null)
-      : setActiveKey(key);
+  const toggleActiveKey = useCallback(
+    (key) =>
+      activeKey === key
+        ? setActiveKey(null)
+        : setActiveKey(key),
+    [activeKey],
+  )
 
   const ref = useRef(null);
 
-  const xBetweenNodes = curveWidth / (forces.length-1);
-  const getX = index => xBetweenNodes * index + curveStart;
+  const previousOffset = usePrevious(offset);
+
+  const transition = useMemo(
+    () => {
+      if (!_.isNumber(previousOffset) || previousOffset === offset) {
+        return null;
+      } else if (offset < previousOffset) {
+        return 'right';
+      } else {
+        return 'left';
+      }
+    },
+    [previousOffset, offset]
+  );
 
   function getMousePosition(e) {
     const svg = ref.current;
@@ -60,13 +73,13 @@ export default function({ isPlaying, forces, onNodeMove, onNodeRelease, onAddFor
       const value = getValue(y);
       if (value >= 0 && value <= 1) {
         const { index, key } = activeNode;
-        onNodeMove(index, key, value);
+        onNodeMove(index+offset, key, value);
       }
     }
   };
 
   function onSVGPointerUp() {
-    activeNode && onNodeRelease(activeNode.index);
+    activeNode && onNodeRelease(activeNode.index + offset);
     setActiveNode(null);
   }
 
@@ -75,152 +88,322 @@ export default function({ isPlaying, forces, onNodeMove, onNodeRelease, onAddFor
     setActiveKey(null);
   }
 
-  function getOpacity(key) {
-    if (!activeKey && !hoveredKey && !activeNode) return 0.5;
-    if (activeNode && key === activeNode.key) return 0.8;
-    if (key === activeKey) return 0.8;
-    if (key === hoveredKey) return 0.5;
-    return 0.25;
+  const getOpacity = useCallback(
+    function(key) {
+      if (!activeKey && !hoveredKey && !activeNode) return 0.5;
+      if (activeNode && key === activeNode.key) return 0.8;
+      if (key === activeKey) return 0.8;
+      if (key === hoveredKey) return 0.5;
+      return 0.25;
+    },
+    [activeKey, activeNode, hoveredKey],
+  );
+
+  function getMaxY(...forces) {
+    const values = _.flatMap(forces, _.values);
+    return getY(_.max(values));
   }
 
-  function renderNode(index, key, value) {
+  const renderHeading = useCallback(
+    function render(key) {
+      const blurbs = {
+        color: 'allows chords to venture further out in the circle of fifths',
+        dissonance: 'results in more "unnatural" sounding chords',
+        gravity: 'prioritizes half step resolutions and tighter voice leading'
+      };
+  
+      let value;
+      if (activeNode && activeNode.key === key) {
+        value = displayedForces[activeNode.index][key];
+      } else if (activeArea) {
+        value = displayedForces[activeArea][key];
+      } else if (hoveredArea === 0 && ['color', 'gravity'].includes(key)) {
+        value = '--'
+      } else if (_.isNumber(hoveredArea)) {
+        value = displayedForces[hoveredArea][key];
+      }
+  
+      return (
+        <div
+          key={`heading${key}`}
+          className="heading transition-opacity"
+          style={{opacity: getOpacity(key)}}
+        >
+          <div
+            style={{cursor: 'pointer'}}
+            onPointerEnter={() => setHoveredKey(key)}
+            onPointerLeave={() => setHoveredKey(null)}
+            onClick={() => toggleActiveKey(key)}
+          >
+            <span>{key}</span>
+            {value !== undefined &&
+              <span className="fade-in">: {value}</span>
+            }          
+          </div>
+          <div> {blurbs[key]} </div>
+        </div>
+      )
+    },
+    [displayedForces, activeArea, activeNode, getOpacity, hoveredArea, toggleActiveKey],
+  )
 
-    const isDisabled = index === 0 && ['color', 'gravity'].includes(key)
-    
-    function onPointerEnter() {
-      setHoveredArea(index);
-      !isDisabled && setHoveredKey(key);
-    }
+  const headings = useMemo(() => keys.map(renderHeading), [renderHeading]);
 
-    function reset() {
-      setHoveredArea(null);
-      setHoveredKey(null)
-    }
+  const renderPath = useCallback(
+    function render(key) {
+      const colors = {
+        color: '#f6cd61',
+        dissonance: '#fe8a71',
+        gravity: '#3da4ab',
+      };
+  
+      const points = _
+        .map(displayedForces, key)
+        .map((value, index) => [getX(index), getY(value)])
+  
+      const prevX = getX(0) - xBetweenNodes;
+      const prevValue = offset !== 0 && forces[offset-1][key];
+      const prevY = prevValue ? getY(prevValue) : getY(0);
+      const prev = [prevX, prevY];
+  
+      const nextX = curveStart + curveWidth + xBetweenNodes;
+      const nextValue = offset + displayCount < forces.length && forces[offset+displayCount][key];
+      const nextY = nextValue ? getY(nextValue) : getY(0);
+      const next = [nextX, nextY];
+  
+      const start = [prevX, getY(0)];
+      const end = [nextX, getY(0)];
+  
+      return (
+        <path
+          key={`path${key}`}
+          className="transition-opacity"
+          clipPath="url(#bounding-box)"
+          d={bezierPath([ start, prev, ...points, next, end ])}
+          fill={colors[key]}
+          opacity={getOpacity(key)}
+          onClick={() => toggleActiveKey(key)}
+        />
+      )
+    },
+    [displayedForces, forces, offset, getOpacity, toggleActiveKey],
+  );
 
-    return (
-      <circle
-        className={`node ${isDisabled && 'disabled-cursor'} transition-opacity`}
-        key={`node${index}${key}`}
-        cy={getY(value)} r={6}
-        opacity={getOpacity(key)}
-        onPointerEnter={onPointerEnter}
-        onPointerLeave={reset}
-        onPointerDown={() => !isDisabled && setActiveNode({ index, key })}
-        onPointerUp={() => !isDisabled && setActiveKey(key)}
-      />
-    )
-  }
+  const paths = useMemo(
+    () =>
+      <>
+        <defs>
+          <clipPath id="bounding-box">
+            <rect
+              x={0} y={marginTop}
+              width={width} height={curveHeight}
+            />
+          </clipPath>
+        </defs>
+        <g
+          key={`paths${offset}`}
+          className={transition && `swipe ${transition}`}
+        >
+          { keys.map(renderPath) }
+        </g>
+      </>,
+    [offset, transition, renderPath],
+  );
 
-  function renderNodes(force, index) {
-    let orderedKeys = keys;
-    if (index === 0) {
-      orderedKeys = ['color', 'gravity', 'dissonance'];
-    } else if (activeKey) {
-      orderedKeys = [ ..._.without(keys, activeKey), activeKey ];
-    }
+  const renderEdgeOverlays = useCallback(
+    function render(buffer = 0) {
+      const addedRightOverlayWidth = Math.max(displayCount - forces.length, 0) * xBetweenNodes;
+      const canScrollLeft = offset !== 0;
+      const canScrollRight = offset + displayCount < forces.length;
+  
+      const leftStartIndex = canScrollLeft ? offset-1 : offset;
+      const leftY = getMaxY(...forces.slice(leftStartIndex, offset+2));
+  
+      const rightStartIndex = canScrollLeft ? offset + displayCount-2 : offset + displayCount-1;
+      const rightY = forces.length < displayCount
+        ? getMaxY(_.last(forces))
+        : getMaxY(...forces.slice(rightStartIndex, offset + displayCount+1));
+  
+      return (
+        <>
+          <rect
+            className={canScrollLeft ? 'left-gradient' : 'cover'}
+            x={0}
+            y={leftY - nodeRadius}
+            width={curveStart - buffer}
+            height={getY(0) - leftY + nodeRadius*2}
+          />
+          <rect
+            className={canScrollRight ? 'right-gradient' : 'cover'}
+            x={curveEnd - addedRightOverlayWidth + buffer}
+            y={rightY - nodeRadius}
+            width={curveStart + addedRightOverlayWidth - buffer}
+            height={getY(0) - rightY + nodeRadius*2}
+          />
+        </>
+      );
+    },
+    [forces, offset],
+  );
 
-    return (
-      <g key={`force${index}`} transform={`translate(${getX(index)}, 0)`}>
-        { orderedKeys.map(key => renderNode(index, key, force[key])) }
-      </g>
-    )
-  }
+  const pathEdgeOverlays = useMemo(() => renderEdgeOverlays(), [renderEdgeOverlays]);
 
-  function renderPath(key) {
-    const points = _
-      .map(forces, key)
-      .map((value, index) => [getX(index), getY(value)])
-
-    const start = [curveStart, getY(0)]
-    const end = [curveEnd, getY(0)]
-    return (
-      <path
-        key={`path${key}`}
-        className="transition-opacity"
-        clipPath="url(#bounding-box)"
-        d={bezierPath([ start, ...points, end ])}
-        fill={colors[key]}
-        opacity={getOpacity(key)}
-        onClick={() => toggleActiveKey(key)}
-      />
-    )
-  }
-
-  function renderHoverArea(beat) {
-    const force = forces[beat];
-    const maxValue = _.max(_.values(force));
-    const maxY = getY(maxValue);
-
-    function toggleUnderlyingKey(e) {
-      const { y } = getMousePosition(e);
-      const value = getValue(y);
-      for (let i=keys.length-1; i>=0; i--) {
-        const key = keys[i];
-        const formerKey = keys[i+1];
-        const maxVal = force[key];
-        const minVal = i === keys.length-1 ? 0 : force[formerKey];
-        if (value > minVal && value < maxVal) {
-          toggleActiveKey(key);
-          return;
+  const renderHoverArea = useCallback(
+    function render(index) {
+      const force = displayedForces[index];
+      const maxY = getMaxY(force);
+  
+      function toggleUnderlyingKey(e) {
+        const { y } = getMousePosition(e);
+        const value = getValue(y);
+        for (let i=keys.length-1; i>=0; i--) {
+          const key = keys[i];
+          const formerKey = keys[i+1];
+          const maxVal = force[key];
+          const minVal = i === keys.length-1 ? 0 : force[formerKey];
+          if (value > minVal && value < maxVal) {
+            toggleActiveKey(key);
+            return;
+          }
         }
       }
-    }
+  
+      return (
+        <rect
+          key={`area${index}`}
+          opacity="0"
+          width={xBetweenNodes / 2}
+          height={getY(0) - maxY}
+          x={getX(index) - (xBetweenNodes / 4)}
+          y={maxY}
+          onPointerEnter={() => setHoveredArea(index)}
+          onPointerLeave={() => setHoveredArea(null)}
+          onClick={toggleUnderlyingKey}
+        />
+      )
+    },
+    [displayedForces, toggleActiveKey],
+  )
 
-    return (
-      <rect
-        key={`area${beat}`}
-        opacity="0"
-        width={xBetweenNodes / 2}
-        height={getY(0) - maxY}
-        x={getX(beat) - (xBetweenNodes / 4)}
-        y={maxY}
-        onPointerEnter={() => setHoveredArea(beat)}
-        onPointerLeave={() => setHoveredArea(null)}
-        onClick={toggleUnderlyingKey}
-      />
-    )
-  }
+  const hoverAreas = useMemo(
+    () => _.range(displayCount).map(renderHoverArea),
+    [renderHoverArea],
+  );
 
-  function renderHeading(key) {
-    let value;
-    if (activeNode && activeNode.key === key) {
-      value = forces[activeNode.index][key];
-    } else if (activeArea) {
-      value = forces[activeArea][key];
-    } else if (hoveredArea === 0 && ['color', 'gravity'].includes(key)) {
-      value = '--'
-    } else if (_.isNumber(hoveredArea)) {
-      value = forces[hoveredArea][key];
-    }
+  const renderNode = useCallback(
+    function renderNode(index, key, value) {
+      const isDisabled = index === 0 && offset === 0 && ['color', 'gravity'].includes(key);
+      
+      function onPointerEnter() {
+        setHoveredArea(index);
+        !isDisabled && setHoveredKey(key);
+      }
+  
+      function reset() {
+        setHoveredArea(null);
+        setHoveredKey(null)
+      }
+  
+      return (
+        <circle
+          className={`node ${isDisabled && 'disabled-cursor'} transition-opacity`}
+          key={`node${index}${key}`}
+          cy={getY(value)} r={nodeRadius}
+          opacity={getOpacity(key)}
+          onPointerEnter={onPointerEnter}
+          onPointerLeave={reset}
+          onPointerDown={() => !isDisabled && setActiveNode({ index, key })}
+          onPointerUp={() => !isDisabled && setActiveKey(key)}
+        />
+      )
+    },
+    [getOpacity, offset],
+  );
 
-    return (
-      <div
-        key={`heading${key}`}
-        className="heading transition-opacity"
-        style={{opacity: getOpacity(key)}}
+  const renderNodes = useCallback(
+    function render(force, index) {
+      let orderedKeys = keys;
+      if (index === 0 && offset === 0) {
+        orderedKeys = ['color', 'gravity', 'dissonance'];
+      } else if (activeKey) {
+        orderedKeys = [ ..._.without(keys, activeKey), activeKey ];
+      }
+  
+      return (
+        <g key={`force${index}`} transform={`translate(${getX(index)}, 0)`}>
+          { orderedKeys.map(key => renderNode(index, key, force[key])) }
+        </g>
+      )
+    },
+    [activeKey, offset, renderNode],
+  );
+
+  const nodes = useMemo(
+    () => 
+      <g
+        key={`nodes${offset}`}
+        className={transition && `swipe ${transition}`}
       >
-        <div
-          style={{cursor: 'pointer'}}
-          onPointerEnter={() => setHoveredKey(key)}
-          onPointerLeave={() => setHoveredKey(null)}
-          onClick={() => toggleActiveKey(key)}
+        { displayedForces.map(renderNodes) }
+      </g>,
+    [displayedForces, offset, transition, renderNodes],
+  );
+
+  const nodeEdgeOverlays = useMemo(() => renderEdgeOverlays(nodeRadius), [renderEdgeOverlays]);
+
+  const addDrop = useMemo(
+    () => {
+      const textProps = {
+        fontSize: height / 32,
+        dominantBaseline: 'middle',
+      };
+
+      return (
+        <g transform={`translate(${curveEnd + (curveMarginX/2)}, ${getY(1)})`}>
+          <text { ...textProps }
+            className="add-force"
+            onClick={onAddForce}
+          >
+            add
+          </text>
+          <text { ...textProps }
+            className={`remove-force ${forces.length <= 2 && 'disabled'}`}
+            y={width / 50}
+            onClick={onRemoveForce}
+          >
+            drop
+          </text>
+        </g>
+      )
+    },
+    [forces.length, onAddForce, onRemoveForce]
+  );
+
+  const scroll = useMemo(
+    () =>
+      <>
+        <g
+          className={`arrow ${offset === 0 && 'hidden'}`}
+          transform={`translate(${curveMarginX*0.25}, ${getY(-.06)}) rotate(-90)`}
+          onClick={onLeftArrowClick}
         >
-          <span>{key}</span>
-          {value !== undefined &&
-            <span className="fade-in">: {value}</span>
-          }          
-        </div>
-        <div>
-          {blurbs[key]}
-        </div>
-      </div>
-    )
-  }
+          { arrow }
+        </g>
+        <g
+          className={`arrow ${forces.length <= displayCount+offset && 'hidden'}`}
+          transform={`translate(${width - (curveMarginX*0.25)}, ${getY(-.06)}) rotate(90)`}
+          onClick={onRightArrowClick}
+        >
+          { arrow }
+        </g>
+      </>,
+    [forces.length, offset, onLeftArrowClick, onRightArrowClick],
+  );
 
   return (
     <>
       <div className="forces">
-        { keys.map(renderHeading) }
+        { headings }
       </div>
       <svg
         className={`curve transition-opacity ${isPlaying && 'transparent'}`}
@@ -231,35 +414,28 @@ export default function({ isPlaying, forces, onNodeMove, onNodeRelease, onAddFor
         onPointerLeave={onSVGPointerLeave}
       >
         <defs>
-          <clipPath id="bounding-box">
-            <rect
-              x={curveStart} y={marginY}
-              width={curveWidth} height={plotHeight}
-            />
-          </clipPath>
+          <linearGradient id="left-gradient">
+            <stop offset="0%" style={{ stopOpacity: 1 }} />
+            <stop offset="100%" style={{ stopOpacity: 0.15 }} />
+          </linearGradient>
+        </defs>
+        <defs>
+          <linearGradient id="right-gradient">
+            <stop offset="0%" style={{ stopOpacity: 0.15 }}/>
+            <stop offset="100%" style={{ stopOpacity: 1 }} />
+          </linearGradient>
         </defs>
         <rect
           className="layer"
           onClick={() => setActiveKey(null)}
         />
-        { keys.map(renderPath) }
-        { _.range(forces.length).map(renderHoverArea) }
-        { forces.map(renderNodes) }
-        <g transform={`translate(${curveEnd + (curveMarginX/2)}, ${getY(0)})`}>
-          <text { ...textProps }
-            className={`remove-force ${forces.length <= 1 && 'disabled'}`}
-            y={-width / 40}
-            onClick={onRemoveForce}
-          >
-            -
-          </text>
-          <text { ...textProps }
-            className={`add-force ${forces.length >= 10 && 'disabled'}`}
-            onClick={onAddForce}
-          >
-            +
-          </text>
-        </g>
+        { paths }
+        { pathEdgeOverlays }
+        { hoverAreas }
+        { nodes }
+        { nodeEdgeOverlays }
+        { addDrop }
+        { scroll }
       </svg>
     </>
   )

@@ -1,4 +1,4 @@
-const smoothing = 0.2;
+const smoothing = 0.15;
 
 const line = (pointA, pointB) => {
   const lengthX = pointB[0] - pointA[0]

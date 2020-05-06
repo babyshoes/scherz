@@ -1,14 +1,14 @@
 import React from 'react';
 import {
-  height, marginY, footerHeight, noteSpacing,
+  height, marginBottom, footerHeight, noteSpacing,
   circleRadius, ledgerLineWidth, offsetWidth, fontSize,
-} from './layout.js';
+} from './layout';
 
 
 export default function({ pitch, space, offset }) {
   // todo: don't hardcode these values
   const x = offset ? offsetWidth : 0;
-  const y = height - (marginY + footerHeight + ((space+2) * noteSpacing));
+  const y = height - (marginBottom + footerHeight + ((space+2) * noteSpacing));
   const accidentals = pitch.slice(1)
     .replace(/#/gi, '♯')
     .replace(/b/gi, '♭')

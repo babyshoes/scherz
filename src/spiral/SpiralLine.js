@@ -2,7 +2,7 @@ import React from 'react';
 import { useUpdate } from 'react-three-fiber';
 
 
-export default function SpiralLine({ points, updateMaterial }) {
+function SpiralLine({ points, updateMaterial }) {
 
   const geometryRef = useUpdate(geometry => geometry.setFromPoints(points));
   const materialRef = useUpdate(updateMaterial);
@@ -14,3 +14,5 @@ export default function SpiralLine({ points, updateMaterial }) {
     </line>
   )
 };
+
+export default React.memo(SpiralLine);

@@ -10,11 +10,22 @@ import ScaleSelect from './ScaleSelect';
 import SpiralCanvas from './spiral/SpiralCanvas';
 
 
-const initialForces = [{"color":0,"dissonance":0.1,"gravity":0}, {"color":0,"dissonance":0.25,"gravity":0}, {"color":0.4,"dissonance":0.5,"gravity":0.25}, {"color":0.2,"dissonance":0.8,"gravity":0}, {"color":0,"dissonance":0.5,"gravity":0.25}];
+const initialForces = [
+  {"color":0,"dissonance":0.1,"gravity":0},
+  {"color":0,"dissonance":0.25,"gravity":0},
+  {"color":0.4,"dissonance":0.5,"gravity":0.25},
+  {"color":0.2,"dissonance":0.72,"gravity":0},
+  {"color":0,"dissonance":0.4,"gravity":0.25}
+];
 const emptyForce = { color: 0, dissonance: 0, gravity: 0 };
 const colors = ['#3da4ab', '#f6cd61', '#fe8a71'];
 
 const displayCount = 5;
+
+const PlayMode = {
+  LOOP: 1,
+  INFINITE: 2,
+}
 
 class App extends React.Component {
   
@@ -28,6 +39,7 @@ class App extends React.Component {
       beat: 0,
       offset: 0,
       isPlaying: false,
+      playMode: PlayMode.LOOP,
     };
   }
 
@@ -75,6 +87,13 @@ class App extends React.Component {
       }
     )
   };
+
+  async catchUp() {
+    const { forces, chordGroups } = this.state;
+    if (forces.length > chordGroups.length) {
+      this.generate(chordGroups.length, {});
+    }
+  }
 
   initialize = () => this.generate(0, {});
 
@@ -151,9 +170,9 @@ class App extends React.Component {
   }
 
   setForce = (beat, key, value) =>
-    this.setState(
-      { forces: set([beat, key], value, this.state.forces) }
-    );
+    this.setState({
+      forces: set([beat, key], value, this.state.forces)
+    });
 
   addForce = () =>
     this.setState(
@@ -172,7 +191,7 @@ class App extends React.Component {
     )
 
   removeForce = () =>
-    this.setState(({ forces, chordGroups, beat }) => ({
+    this.setState(({ forces, chordGroups }) => ({
       forces: _.dropRight(forces, 1),
       chordGroups: _.dropRight(chordGroups, 1),
       offset: Math.max(forces.length - (displayCount+1), 0),
@@ -248,28 +267,42 @@ class App extends React.Component {
   playSelectedChord = () =>
     this.selectedChord.notes.forEach(note => this.playNote(note, 0.75));
 
-  playOn() {
+  playOn(forceCount) {
     this.playSelectedChord();
     setTimeout(() => {
       this.setState(
-        ({ beat, forces, offset }) => {
-          const newBeat = (beat+1) % forces.length;
-          let newoffset;
+        ({ beat, forces, offset, playMode }) => {
+          const newBeat = playMode === PlayMode.LOOP
+            ? (beat+1) % forces.length
+            : beat+1;
+
+          let newOffset;
           if (newBeat === 0) {
-            newoffset = 0;
+            newOffset = 0;
           } else if (beat === offset + (displayCount-1)) {
-            newoffset = offset+1;
+            newOffset = offset+1;
           } else {
-            newoffset = offset;
+            newOffset = offset;
           }
-          return { beat: newBeat, offset: newoffset };
+
+          const newForces = playMode === PlayMode.INFINITE
+            ? [ ...forces, forces[(beat % (forceCount-1)) + 1] ]
+            : forces;
+
+          return { beat: newBeat, offset: newOffset, forces: newForces };
         },
-        () => this.state.isPlaying && this.playOn(),
+        () => {
+          this.catchUp();
+          this.state.isPlaying && this.playOn(forceCount);
+        },
       )
     }, 1000);
   }
 
-  play = () => this.setState({ isPlaying: true }, this.playOn);
+  play = () => this.setState(
+    { isPlaying: true },
+    () => this.playOn(this.state.forces.length),
+  );
   pause = () => this.setState({ isPlaying: false });
 
   render() {

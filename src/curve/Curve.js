@@ -1,27 +1,21 @@
 import React, { useState, useRef, useMemo, useCallback } from 'react';
 import _ from 'lodash';
 import {
-  width, height, marginTop, nodeRadius,
-  getY, getValue, arrowWidth, arrowHeight,
-  curveHeight, curveStart, curveEnd, curveWidth, curveMarginX,
+  width, height, marginTop, controlsHeight,
+  displayCount, nodeRadius, xBetweenNodes,
+  getX, getY, getValue,
+  curveHeight, curveStart, curveEnd, curveWidth,
 } from './layout.js';
 import bezierPath from './cubic-bezier.js';
-import arrowSVG from '../util/arrow-svg.js';
 import usePrevious from '../util/use-previous.js';
+import Controls from './Controls';
 
 
 const keys = ['dissonance', 'color', 'gravity'];
 
-const arrow = arrowSVG(arrowWidth, arrowHeight);
-
-const displayCount = 5;
-const xBetweenNodes = curveWidth / (displayCount-1);
-
-const getX = index => xBetweenNodes * index + curveStart;
-
 export default function Curve({
-  isPlaying, forces, offset, onNodeMove, onNodeRelease,
-  onAddForce, onRemoveForce, onLeftArrowClick, onRightArrowClick,
+  isPlaying, forces, offset,
+  onNodeMove, onNodeRelease, onAddForce, onRemoveForce,
 }) {
 
   const [activeNode, setActiveNode] = useState(null);
@@ -195,8 +189,8 @@ export default function Curve({
         <defs>
           <clipPath id="bounding-box">
             <rect
-              x={0} y={marginTop}
-              width={width} height={curveHeight}
+              x={0} y={0}
+              width={width} height={marginTop + controlsHeight + curveHeight}
             />
           </clipPath>
         </defs>
@@ -351,55 +345,6 @@ export default function Curve({
 
   const nodeEdgeOverlays = useMemo(() => renderEdgeOverlays(nodeRadius), [renderEdgeOverlays]);
 
-  const addDrop = useMemo(
-    () => {
-      const textProps = {
-        fontSize: height / 32,
-        dominantBaseline: 'middle',
-      };
-
-      return (
-        <g transform={`translate(${curveEnd + (curveMarginX/2)}, ${getY(1)})`}>
-          <text { ...textProps }
-            className="add-force"
-            onClick={onAddForce}
-          >
-            add
-          </text>
-          <text { ...textProps }
-            className={`remove-force ${forces.length <= 2 && 'disabled'}`}
-            y={width / 50}
-            onClick={onRemoveForce}
-          >
-            drop
-          </text>
-        </g>
-      )
-    },
-    [forces.length, onAddForce, onRemoveForce]
-  );
-
-  const scroll = useMemo(
-    () =>
-      <>
-        <g
-          className={`arrow ${offset === 0 && 'hidden'}`}
-          transform={`translate(${curveMarginX*0.25}, ${getY(-.06)}) rotate(-90)`}
-          onClick={onLeftArrowClick}
-        >
-          { arrow }
-        </g>
-        <g
-          className={`arrow ${forces.length <= displayCount+offset && 'hidden'}`}
-          transform={`translate(${width - (curveMarginX*0.25)}, ${getY(-.06)}) rotate(90)`}
-          onClick={onRightArrowClick}
-        >
-          { arrow }
-        </g>
-      </>,
-    [forces.length, offset, onLeftArrowClick, onRightArrowClick],
-  );
-
   return (
     <>
       <div className="forces">
@@ -429,13 +374,16 @@ export default function Curve({
           className="layer"
           onClick={() => setActiveKey(null)}
         />
+        <Controls
+          forceCount={forces.length}
+          onAddForce={onAddForce}
+          onRemoveForce={onRemoveForce}
+        />
         { paths }
         { pathEdgeOverlays }
         { hoverAreas }
         { nodes }
         { nodeEdgeOverlays }
-        { addDrop }
-        { scroll }
       </svg>
     </>
   )

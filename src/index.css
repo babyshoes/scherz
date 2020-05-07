@@ -27,13 +27,14 @@ body {
 .App {
   display: grid;
   grid-template-columns: 1fr 5fr 1.6fr; 
-  grid-template-rows: 0.1fr 0.05fr 0.15fr 1.5fr 1fr 0.1fr;
+  grid-template-rows: 0.1fr 0.05fr 0.15fr 1.5fr 0.08fr 1fr 0.1fr;
   grid-column-gap: 2%;
   grid-template-areas:
     ". . . ."
     "header scales spiral ."
     "header forces spiral ."
     "header curve spiral ."
+    "header scroll spiral ."
     "header staff spiral ."
     ". . . .";
   background-color: var(--main-color);
@@ -60,6 +61,11 @@ circle {
   pointer-events: none;
 }
 
+.hidden {
+  opacity: 0 !important;
+  pointer-events: none;
+}
+
 .spiral.transparent {
   pointer-events: all !important;
 }
@@ -67,11 +73,6 @@ circle {
 .arrow {
   cursor: pointer;
   opacity: 0.75;
-}
-
-.arrow.hidden {
-  pointer-events: none;
-  opacity: 0;
 }
 
 .arrow:hover {
@@ -123,10 +124,6 @@ circle {
 rect.chord {
   opacity: 0;
   cursor: pointer;
-}
-
-rect.chord:not(.on-beat) {
-  transition: opacity 0.25s;
 }
 
 rect.chord:hover, rect.chord.on-beat {
@@ -185,9 +182,16 @@ rect.right-gradient {
   fill: url(#right-gradient);
 }
 
+.controls {
+  grid-area: controls;
+}
+
+.scroll {
+  grid-area: scroll;
+}
+
 .spiral {
   grid-area: spiral;
-  position: relative;
 }
 
 .header {
@@ -327,13 +331,22 @@ rect.right-gradient {
   text-shadow: -2px 1px 3px #000;
 }
 
+@keyframes rainbowAnimation {
+  0%, 100% {
+    background-position: 0 0;
+  }
+  50% {
+    background-position: 100% 0;
+  }
+}
+
 .rainbow-surf {
   background:linear-gradient(to right, var(--accent-color2), var(--accent-color1), var(--accent-color3));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
   animation: rainbowAnimation 2s ease-in-out infinite;
-  background-size: 400% 100%;
+  background-size: 200% 100%;
 }
 
 .tooltiptext {
@@ -342,7 +355,6 @@ rect.right-gradient {
   top: 2%;
   left: 3%;
   height: 42vw;
-  transition: opacity 0.25s ease-in-out;
   font-size: 1.5vw;
   background-color: var(--main-color);
   text-align: left;
@@ -370,12 +382,35 @@ rect.right-gradient {
   opacity: 1;
 }
 
+.play-modes {
+  font-size: 2.5vw;
+  display: flex;
+  justify-content: space-between;
+  width: 5.5vw;
+}
 
-@keyframes rainbowAnimation {
-  0%, 100% {
-    background-position: 0 0;
-  }
-  50% {
-    background-position: 100% 0;
-  }
+.play-modes.hidden {
+  pointer-events: initial !important;
+}
+
+.play-modes span {
+  font-weight: lighter;
+  opacity: 0.5;
+  cursor: pointer;
+}
+
+.play-modes span:hover {
+  opacity: 0.75;
+}
+
+.play-modes span.selected {
+  opacity: 1;
+}
+
+.play-modes .loop.selected {
+  font-weight: bold;
+}
+
+.play-modes .infinite.selected {
+  font-weight: normal;
 }

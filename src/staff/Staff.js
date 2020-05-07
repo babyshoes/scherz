@@ -47,7 +47,7 @@ export default function Staff({
             onDownArrowClick={() => onDownArrowClick(thisBeat)}
           />
           <rect
-            className={`chord ${thisBeat === beat && 'on-beat'}`}
+            className={`chord ${thisBeat === beat ? 'on-beat' : 'transition-opacity'}`}
             x={chordSpacing / -4}
             y={marginTop + headerHeight + lineSpacing}
             width={chordSpacing / 2}

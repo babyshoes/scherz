@@ -6,26 +6,23 @@ import scherzClient from './util/scherz-client';
 import Header from './Header';
 import Curve from './curve/Curve';
 import Staff from './staff/Staff';
+import Scroll from './scroll/Scroll';
 import ScaleSelect from './ScaleSelect';
 import SpiralCanvas from './spiral/SpiralCanvas';
+import PlayMode from './util/play-mode';
 
 
 const initialForces = [
   {"color":0,"dissonance":0.1,"gravity":0},
   {"color":0,"dissonance":0.25,"gravity":0},
   {"color":0.4,"dissonance":0.5,"gravity":0.25},
-  {"color":0.2,"dissonance":0.72,"gravity":0},
-  {"color":0,"dissonance":0.4,"gravity":0.25}
+  {"color":0.2,"dissonance":0.8,"gravity":0},
+  {"color":0,"dissonance":0.5,"gravity":0.25}
 ];
 const emptyForce = { color: 0, dissonance: 0, gravity: 0 };
 const colors = ['#3da4ab', '#f6cd61', '#fe8a71'];
 
 const displayCount = 5;
-
-const PlayMode = {
-  LOOP: 1,
-  INFINITE: 2,
-}
 
 class App extends React.Component {
   
@@ -254,12 +251,12 @@ class App extends React.Component {
 
   setBeat = (beat) => this.setState({ beat }, this.playSelectedChord);
 
-  offsetRight = () => this.setState(
+  scrollRight = () => this.setState(
     ({ beat, offset }) => ({ beat: beat+1, offset: offset+1 }),
     this.playSelectedChord,
   );
 
-  offsetLeft = () => this.setState(
+  scrollLeft = () => this.setState(
     ({ beat, offset }) => ({ beat: beat-1, offset: offset-1 }),
     this.playSelectedChord,
   )
@@ -292,7 +289,7 @@ class App extends React.Component {
           return { beat: newBeat, offset: newOffset, forces: newForces };
         },
         () => {
-          this.catchUp();
+          this.state.playMode === PlayMode.INFINITE && this.catchUp();
           this.state.isPlaying && this.playOn(forceCount);
         },
       )
@@ -306,11 +303,13 @@ class App extends React.Component {
   pause = () => this.setState({ isPlaying: false });
 
   render() {
-    const { scales, isPlaying, beat, offset, forces, chordGroups } = this.state;
+    const { scales, isPlaying, playMode, beat, offset, forces, chordGroups } = this.state;
     return (
       <div className="App">
         <Header
           isPlaying={isPlaying}
+          playMode={playMode}
+          setPlayMode={(mode) => this.setState({ playMode: mode })}
           onPressPlay={this.play}
           onPressPause={this.pause}
         />
@@ -327,8 +326,13 @@ class App extends React.Component {
           onNodeRelease={(beat) => this.generate(beat, { setBeat: true })}
           onAddForce={this.addForce}
           onRemoveForce={this.removeForce}
-          onLeftArrowClick={this.offsetLeft}
-          onRightArrowClick={this.offsetRight}
+        />
+        <Scroll
+          isPlaying={isPlaying}
+          forceCount={forces.length}
+          offset={offset}
+          onLeftArrowClick={this.scrollLeft}
+          onRightArrowClick={this.scrollRight}
         />
         <Staff
           isPlaying={isPlaying}

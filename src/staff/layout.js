@@ -1,4 +1,4 @@
-export const width = 1350;
+export const width = 1400;
 export const height = 400;
 
 export const marginX = 0;

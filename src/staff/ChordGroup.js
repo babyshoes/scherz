@@ -15,19 +15,6 @@ const ChordGroup = ({ beat, chordGroup, offset, onUpArrowClick, onDownArrowClick
 
   const previousChordIndex = usePrevious(chordIndex);
 
-  const yTransition = useMemo(
-    () => {
-      if (!_.isNumber(previousChordIndex) || chordIndex === previousChordIndex) {
-        return null;
-      } else if (chordIndex > previousChordIndex) {
-        return 'up';
-      } else {
-        return 'down';
-      }
-    },
-    [chordIndex, previousChordIndex],
-  );
-
   const previousOffset = usePrevious(offset);
 
   const xTransition = useMemo(
@@ -43,6 +30,18 @@ const ChordGroup = ({ beat, chordGroup, offset, onUpArrowClick, onDownArrowClick
     [previousOffset, offset]
   );
 
+  const yTransition = useMemo(
+    () => {
+      if (!_.isNumber(previousChordIndex) || chordIndex === previousChordIndex || xTransition) {
+        return null;
+      } else if (chordIndex > previousChordIndex) {
+        return 'up';
+      } else {
+        return 'down';
+      }
+    },
+    [chordIndex, previousChordIndex, xTransition],
+  );
 
   const arrowsAreDisabled = chords.length === 1;
 

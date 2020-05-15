@@ -13,7 +13,7 @@ function Scroll({ isPlaying, forceCount, offset, onLeftArrowClick, onRightArrowC
       className={`scroll transition-opacity ${isPlaying && 'transparent'}`}
       viewBox={`0 0 ${width} ${height}`}
     >
-      <g transform={`translate(0, ${height / 2.5})`}>
+      <g transform={`translate(0, ${height / 2})`}>
         <g
           className={`arrow ${offset === 0 && 'hidden'}`}
           transform={`translate(0, 0) rotate(-90)`}

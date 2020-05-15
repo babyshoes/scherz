@@ -1,5 +1,6 @@
-import React, { createRef, useEffect } from 'react'
-import { Dom, useUpdate } from 'react-three-fiber'
+import React, { createRef, useEffect } from 'react';
+import { useUpdate } from 'react-three-fiber';
+import { HTML } from 'drei';
 
 export default function PitchMarker({ position, pitch, updateMaterial }) {
   const ref = createRef()
@@ -11,7 +12,7 @@ export default function PitchMarker({ position, pitch, updateMaterial }) {
 
   return (
     <mesh position={position} name={pitch}>
-      <Dom ref={ref}> <span> { pitch } </span> </Dom>
+      <HTML> <span ref={ref}> { pitch } </span> </HTML>
       <sphereBufferGeometry attach="geometry" args={[0.1, 1, 1]} />
       <meshBasicMaterial ref={materialRef} attach="material" transparent />
     </mesh>

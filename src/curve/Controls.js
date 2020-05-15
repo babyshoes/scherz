@@ -3,7 +3,7 @@ import { width, curveMarginX, marginTop, fontSize } from './layout';
 
 const textProps = {
   fontSize,
-  dominantBaseline: 'middle',
+  dominantBaseline: 'hanging'
 };
 
 const Controls = ({ forceCount, onAddForce, onRemoveForce }) =>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import PlayMode from './util/play-mode';
+
 
 const about = (
   <div className="tooltiptext transition-opacity">
@@ -24,7 +24,7 @@ const about = (
   </div>
 )
 
-export default function Header({ isPlaying, playMode, setPlayMode, onPressPlay, onPressPause }) {
+export default function Header({ isPlaying, onPressPlay, onPressPause }) {
 
   const [showPlayModes, setShowPlayModes] = useState(false);
   

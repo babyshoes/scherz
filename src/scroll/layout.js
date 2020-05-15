@@ -1,4 +1,4 @@
-export const width = 1200;
-export const height = 40;
-export const arrowWidth = height * .8;
-export const arrowHeight = height;
+export const width = 1400;
+export const height = width / 50;
+export const arrowWidth = height;
+export const arrowHeight = height*1.2;

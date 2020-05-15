@@ -14,7 +14,7 @@ import PlayMode from './util/play-mode';
 
 const initialForces = [
   {"color":0,"dissonance":0.1,"gravity":0},
-  {"color":0,"dissonance":0.25,"gravity":0},
+  {"color":0.15,"dissonance":0.25,"gravity":0},
   {"color":0.4,"dissonance":0.5,"gravity":0.25},
   {"color":0.2,"dissonance":0.8,"gravity":0},
   {"color":0,"dissonance":0.5,"gravity":0.25}
@@ -106,7 +106,7 @@ class App extends React.Component {
 
   componentDidMount() {
     this.initialize();
-    this.audioCtx = new AudioContext();
+    this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     document.addEventListener("keyup", e => {
       if (e.code === 'Space') {
         this.onPressSpace();
@@ -127,25 +127,38 @@ class App extends React.Component {
   onPressDown = () => this.cycleChordDown(this.state.beat);
 
   onPressLeft = () => {
-    const { beat, offset } = this.state;
-    const newoffset = (offset !== 0 && offset === beat)
-      ? offset-1
-      : offset;
-    (beat !== 0) && this.setState(
-      { beat: beat-1, offset: newoffset },
+    const { beat, offset, forces } = this.state;
+    let newOffset;
+    if (beat === 0) {
+      newOffset = forces.length - displayCount;
+    } else if (beat === offset) {
+      newOffset = offset-1;
+    } else {
+      newOffset = offset;
+    }
+    this.setState(
+      { beat: (beat-1 + forces.length) % forces.length, offset: newOffset },
       this.playSelectedChord,
     )
   }
 
   onPressRight = () => {
     const { beat, offset, forces, chordGroups } = this.state;
-    if (beat < forces.length-1 && chordGroups[beat+1]) {
-      const newoffset = (beat === offset + (displayCount-1)) ? offset+1 : offset;
-      this.setState(
-        { beat: beat+1, offset: newoffset },
-        this.playSelectedChord,
-      )
+    if (beat < forces.length-1 && !chordGroups[beat+1]) {
+      return;
     }
+    let newOffset;
+    if (beat === forces.length-1) {
+      newOffset = 0;
+    } else if (beat === offset + (displayCount-1)) {
+      newOffset = offset+1;
+    } else {
+      newOffset = offset;
+    }
+    this.setState(
+      { beat: (beat+1 + forces.length) % forces.length, offset: newOffset },
+      this.playSelectedChord,
+    )
   }
 
   midiToHz = (midi) => Math.pow(2, (midi-69)/12) * 440;
@@ -196,12 +209,8 @@ class App extends React.Component {
     }))
 
   playScale = (scale) =>
-    scaleIntervals[scale]
-      .reduce(
-        (notes, interval) => [ ...notes, _.last(notes) + interval],
-        [60]
-      )
-      .forEach((note, i) => this.playNote(note, 0.18, i*0.18));
+    [ ...scaleIntervals[scale].map(i => i + 60), 72 ]
+      .forEach((note, i) => this.playNote(note, 0.18, i*0.18))
 
   selectScale = (scale) => {
     const { scales } = this.state;

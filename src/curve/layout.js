@@ -5,8 +5,8 @@ export const displayCount = 5;
 export const nodeRadius = height / 100;
 
 export const marginX = 0;
-export const marginTop = nodeRadius*2;
-export const marginBottom = 0;
+export const marginTop = nodeRadius;
+export const marginBottom = nodeRadius;
 
 export const controlsHeight = height / 15;
 export const fontSize = height / 32;
